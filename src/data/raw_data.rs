@@ -208,4 +208,12 @@ mod test {
             serde_json::from_str(example_bankara_match).unwrap();
         assert_eq!(expected_bankara_match, parsed_bankara_match);
     }
+
+    //TODO: Add tests for x rank, and vs stages
+
+    #[tokio::test]
+    async fn test_parsing_online() {
+        let res_text = reqwest::get("https://splatoon3.ink/data/schedules.json").await.unwrap().text().await.unwrap();
+        let _parsed: RawData = serde_json::from_str(&res_text).unwrap();
+    }
 }
