@@ -6,8 +6,8 @@ use serde::{self, Deserialize};
 /// The root of the splatoon3.ink json is a data object, so we need to wrap it.
 ///
 /// * `data`:
-struct RawData {
-    data: Data,
+pub struct RawData {
+    pub data: Data,
 }
 
 #[derive(Deserialize)]
@@ -19,33 +19,32 @@ struct RawData {
 /// * `bankara_schedules`:
 /// * `x_schedules`:
 /// * `vs_stages`:
-pub struct Data {
-    regular_schedules: ScheduleContainer<MatchNode>,
-    bankara_schedules: ScheduleContainer<MatchNodeBankara>,
-    x_schedules: ScheduleContainer<MatchNode>,
+pub(super) struct Data {
+    pub regular_schedules: ScheduleContainer<MatchNode>,
+    pub bankara_schedules: ScheduleContainer<MatchNodeBankara>,
+    pub x_schedules: ScheduleContainer<MatchNode>,
     // event_schedules: MatchSchedules,
     // fest_schedules: MatchSchedules,
     // coop_grouping_schedule: MatchSchedules,
     // current_fest: MatchSchedules,
-    vs_stages: VsStages,
 }
 
 #[derive(Deserialize)]
 /// Schedules are usually in a node container with a vector of single schedules.
 ///
 /// * `nodes`:
-struct ScheduleContainer<T> {
-    nodes: Vec<T>,
+pub(super) struct ScheduleContainer<T> {
+    pub nodes: Vec<T>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
-struct MatchNode {
+pub(super) struct MatchNode {
     #[serde(alias = "startTime")]
-    start_time: chrono::DateTime<Utc>,
+    pub start_time: chrono::DateTime<Utc>,
     #[serde(alias = "endTime")]
-    end_time: chrono::DateTime<Utc>,
+    pub end_time: chrono::DateTime<Utc>,
     #[serde(alias = "regularMatchSetting", alias = "xMatchSetting")]
-    match_setting: MatchSetting,
+    pub match_setting: MatchSetting,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -55,55 +54,50 @@ struct MatchNode {
 /// * `start_time`:
 /// * `end_time`:
 /// * `match_settings`:
-struct MatchNodeBankara {
+pub(super) struct MatchNodeBankara {
     #[serde(alias = "startTime")]
-    start_time: chrono::DateTime<Utc>,
+    pub start_time: chrono::DateTime<Utc>,
     #[serde(alias = "endTime")]
-    end_time: chrono::DateTime<Utc>,
+    pub end_time: chrono::DateTime<Utc>,
     #[serde(alias = "bankaraMatchSettings")]
-    match_settings: Vec<BankaraMatchSetting>,
+    pub match_settings: Vec<BankaraMatchSetting>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-struct MatchSetting {
-    vs_stages: Vec<MatchVsStage>,
-    vs_rule: MatchVsRule,
+pub(super) struct MatchSetting {
+    pub vs_stages: Vec<MatchVsStage>,
+    pub vs_rule: MatchVsRule,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "UPPERCASE")]
-enum BankaraMode {
+pub(super) enum BankaraMode {
     Open,
     Challenge,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-struct BankaraMatchSetting {
+pub(super) struct BankaraMatchSetting {
     #[serde(flatten)]
-    match_setting: MatchSetting,
-    bankara_mode: BankaraMode,
+    pub match_setting: MatchSetting,
+    pub bankara_mode: BankaraMode,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-struct MatchVsStage {
+pub(super) struct MatchVsStage {
     vs_stage_id: u16,
-    name: String,
-    id: String,
+    pub name: String,
+    pub id: String,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
-struct VsStages {
-    nodes: Vec<MatchVsStage>,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-struct MatchVsRule {
-    name: String,
+pub(super) struct MatchVsRule {
+    pub name: String,
     rule: String,
-    id: String,
+    pub id: String,
 }
 
 #[cfg(test)]
@@ -111,7 +105,7 @@ mod test {
     use chrono::{TimeZone, Utc};
 
     use crate::data::raw_data::{
-        BankaraMatchSetting, BankaraMode, MatchNodeBankara, MatchVsRule, RawData, ScheduleContainer
+        BankaraMatchSetting, BankaraMode, MatchNodeBankara, MatchVsRule, RawData,
     };
 
     use super::{MatchNode, MatchSetting, MatchVsStage};
@@ -209,7 +203,6 @@ mod test {
         assert_eq!(expected_bankara_match, parsed_bankara_match);
     }
 
-    //TODO: Add tests for x rank, and vs stages
     #[tokio::test]
     async fn test_deserialize_x_match() {
         let x_match_example = r#"
@@ -260,10 +253,14 @@ mod test {
                         vs_stage_id: 19,
                         name: "Crableg Capital".to_string(),
                         id: "VnNTdGFnZS0xOQ==".to_string(),
-                    }
+                    },
                 ],
-                vs_rule: MatchVsRule { name: "Splat Zones".to_string(), rule: "AREA".to_string(), id: "VnNSdWxlLTE=".to_string() }
-            }
+                vs_rule: MatchVsRule {
+                    name: "Splat Zones".to_string(),
+                    rule: "AREA".to_string(),
+                    id: "VnNSdWxlLTE=".to_string(),
+                },
+            },
         };
         let parsed_schedule: MatchNode = serde_json::from_str(x_match_example).unwrap();
         assert_eq!(expected_schedule, parsed_schedule);
@@ -271,7 +268,12 @@ mod test {
 
     #[tokio::test]
     async fn test_parsing_online() {
-        let res_text = reqwest::get("https://splatoon3.ink/data/schedules.json").await.unwrap().text().await.unwrap();
+        let res_text = reqwest::get("https://splatoon3.ink/data/schedules.json")
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
         let _parsed: RawData = serde_json::from_str(&res_text).unwrap();
     }
 }

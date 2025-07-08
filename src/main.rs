@@ -1,5 +1,4 @@
 use color_eyre::{Result, eyre::Ok};
-use data::fetch_data;
 use ratatui::{
     DefaultTerminal,
     crossterm::event::{self, Event, KeyEvent},
@@ -16,7 +15,6 @@ mod data;
 impl App {
     /// runs the application's main loop until the user quits
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        fetch_data()?;
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;

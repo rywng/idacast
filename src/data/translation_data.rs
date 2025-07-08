@@ -4,15 +4,32 @@ use serde::Deserialize;
 
 type TranslationMap = HashMap<String, TranslationContent>;
 
+pub type FlattenedTranslationDictionary = HashMap<String, String>;
+
+impl From<TranslationData> for FlattenedTranslationDictionary {
+    fn from(value: TranslationData) -> Self {
+        let mut res: HashMap<String, String> = HashMap::new();
+        for translation_map in [value.bosses, value.stages, value.rules] {
+            translation_map
+                .iter()
+                .for_each(|(id, translation_content)| {
+                    res.insert(id.to_string(), translation_content.name.clone());
+                })
+        }
+
+        res
+    }
+}
+
 #[derive(Deserialize)]
 pub struct TranslationData {
-    gear: TranslationMap,
+    // gear: TranslationMap,
     stages: TranslationMap,
     rules: TranslationMap,
-    weapons: TranslationMap,
+    // weapons: TranslationMap,
     bosses: TranslationMap,
-    brands: TranslationMap,
-    powers: TranslationMap,
+    // brands: TranslationMap,
+    // powers: TranslationMap,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
