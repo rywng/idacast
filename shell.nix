@@ -9,10 +9,6 @@ let
 in
 pkgs.mkShell {
   packages = with pkgs; [ clippy taplo ];
-  # nativeBuildInputs = with pkgs; [
-  #   cargo
-  # ];
-
   buildInputs = with pkgs; [
     cargo
     rust-analyzer
