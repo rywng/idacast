@@ -72,11 +72,18 @@ struct MatchSetting {
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "UPPERCASE")]
+enum BankaraMode {
+    Open,
+    Challenge,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 struct BankaraMatchSetting {
     #[serde(flatten)]
     match_setting: MatchSetting,
-    bankara_mode: String,
+    bankara_mode: BankaraMode,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -104,7 +111,7 @@ mod test {
     use chrono::{TimeZone, Utc};
 
     use crate::data::raw_data::{
-        BankaraMatchSetting, MatchNodeBankara, MatchVsRule, RawData, ScheduleContainer,
+        BankaraMatchSetting, BankaraMode, MatchNodeBankara, MatchVsRule, RawData, ScheduleContainer
     };
 
     use super::{MatchNode, MatchSetting, MatchVsStage};
@@ -171,7 +178,7 @@ mod test {
                             id: "VnNSdWxlLTM=".to_string(),
                         },
                     },
-                    bankara_mode: "CHALLENGE".to_string(),
+                    bankara_mode: BankaraMode::Challenge,
                 },
                 BankaraMatchSetting {
                     match_setting: MatchSetting {
@@ -193,7 +200,7 @@ mod test {
                             id: "VnNSdWxlLTI=".to_string(),
                         },
                     },
-                    bankara_mode: "OPEN".to_string(),
+                    bankara_mode: BankaraMode::Open,
                 },
             ],
         };
