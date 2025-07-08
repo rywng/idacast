@@ -210,6 +210,64 @@ mod test {
     }
 
     //TODO: Add tests for x rank, and vs stages
+    #[tokio::test]
+    async fn test_deserialize_x_match() {
+        let x_match_example = r#"
+                {
+          "startTime": "2025-07-08T06:00:00Z",
+          "endTime": "2025-07-08T08:00:00Z",
+          "xMatchSetting": {
+            "__isVsSetting": "XMatchSetting",
+            "__typename": "XMatchSetting",
+            "vsStages": [
+              {
+                "vsStageId": 8,
+                "name": "Barnacle & Dime",
+                "image": {
+                  "url": "https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/f70e9f5af477a39ccfab631bfb81c9e2cedb4cd0947fe260847c214a6d23695f_1.png"
+                },
+                "id": "VnNTdGFnZS04"
+              },
+              {
+                "vsStageId": 19,
+                "name": "Crableg Capital",
+                "image": {
+                  "url": "https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/4e0e9e2046aff1d635e23946d9f0a461486d2aab349079e551037e426ac82c7a_1.png"
+                },
+                "id": "VnNTdGFnZS0xOQ=="
+              }
+            ],
+            "vsRule": {
+              "name": "Splat Zones",
+              "rule": "AREA",
+              "id": "VnNSdWxlLTE="
+            }
+          },
+          "festMatchSettings": null
+        }
+        "#;
+        let expected_schedule = MatchNode {
+            start_time: Utc.with_ymd_and_hms(2025, 7, 8, 6, 0, 0).unwrap(),
+            end_time: Utc.with_ymd_and_hms(2025, 7, 8, 8, 0, 0).unwrap(),
+            match_setting: MatchSetting {
+                vs_stages: vec![
+                    MatchVsStage {
+                        vs_stage_id: 8,
+                        name: "Barnacle & Dime".to_string(),
+                        id: "VnNTdGFnZS04".to_string(),
+                    },
+                    MatchVsStage {
+                        vs_stage_id: 19,
+                        name: "Crableg Capital".to_string(),
+                        id: "VnNTdGFnZS0xOQ==".to_string(),
+                    }
+                ],
+                vs_rule: MatchVsRule { name: "Splat Zones".to_string(), rule: "AREA".to_string(), id: "VnNSdWxlLTE=".to_string() }
+            }
+        };
+        let parsed_schedule: MatchNode = serde_json::from_str(x_match_example).unwrap();
+        assert_eq!(expected_schedule, parsed_schedule);
+    }
 
     #[tokio::test]
     async fn test_parsing_online() {

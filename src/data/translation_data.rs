@@ -72,7 +72,7 @@ mod test {
     }
 
     #[tokio::test]
-    async fn test_parsing_data() {
+    async fn test_parsing_online() {
         let test_data = reqwest::get("https://splatoon3.ink/data/locale/en-US.json")
             .await
             .unwrap()
