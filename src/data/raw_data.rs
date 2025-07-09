@@ -6,7 +6,7 @@ use serde::{self, Deserialize};
 /// The root of the splatoon3.ink json is a data object, so we need to wrap it.
 ///
 /// * `data`:
-pub struct RawData {
+pub(super) struct RawData {
     pub data: Data,
 }
 

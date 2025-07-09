@@ -1,8 +1,6 @@
 use color_eyre::{Result, eyre::Ok};
 use ratatui::{
-    DefaultTerminal,
-    crossterm::event::{self, Event, KeyEvent},
-    prelude::*,
+    crossterm::event::{self, Event, KeyEvent}, prelude::*, DefaultTerminal
 };
 
 #[derive(Debug, Default)]
@@ -10,6 +8,7 @@ pub struct App {
     exit: bool,
 }
 
+#[allow(unused_variables, dead_code)]
 mod data;
 
 impl App {

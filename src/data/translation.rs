@@ -1,10 +1,27 @@
-use std::collections::HashMap;
-
 use serde::Deserialize;
+use std::{collections::HashMap, fmt::Display};
+
+use super::DataError;
+
+pub(super) trait Translatable {
+    fn translate(self, dict: &FlattenedTranslationDictionary) -> Self;
+}
+
+pub(super) trait Dictionary {
+    fn lookup(&self, id: &str) -> Result<String, DataError>;
+}
 
 type TranslationMap = HashMap<String, TranslationContent>;
 
 pub type FlattenedTranslationDictionary = HashMap<String, String>;
+
+impl Dictionary for FlattenedTranslationDictionary {
+    fn lookup(&self, id: &str) -> Result<String, DataError> {
+        self.get(id)
+            .ok_or_else(|| DataError::TranslationError(id.to_string()))
+            .cloned()
+    }
+}
 
 impl From<TranslationData> for FlattenedTranslationDictionary {
     fn from(value: TranslationData) -> Self {
@@ -39,8 +56,10 @@ pub struct TranslationContent {
 
 #[cfg(test)]
 mod test {
-
-    use crate::data::translation_data::{TranslationContent, TranslationData};
+    use crate::data::translation::Dictionary;
+    use crate::data::translation::{
+        FlattenedTranslationDictionary, TranslationContent, TranslationData,
+    };
 
     use super::TranslationMap;
 
@@ -103,5 +122,20 @@ mod test {
                 name: "Sturgeon Shipyard".to_string()
             }
         )
+    }
+
+    #[test]
+    fn test_translation_lookup_with_dictionary() {
+        let dict: FlattenedTranslationDictionary = FlattenedTranslationDictionary::from([
+            ("VnNTdGFnZS0x".to_string(), "温泉花大峡谷".to_string()),
+            ("VnNTdGFnZS0y".to_string(), "鳗鲶区".to_string()),
+        ]);
+
+        assert_eq!(
+            dict.lookup("VnNTdGFnZS0x").unwrap(),
+            "温泉花大峡谷".to_string()
+        );
+
+        assert!(dict.lookup("nonexistent").is_err());
     }
 }

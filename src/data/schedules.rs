@@ -1,6 +1,10 @@
 use chrono::{self, DateTime, Utc};
 
-use super::raw_data;
+use super::{
+    raw_data,
+    translation::{Dictionary, Translatable},
+};
+#[derive(Debug)]
 pub struct Schedules {
     pub regular: Vec<Schedule>,
     pub anarchy_open: Vec<Schedule>,
@@ -8,6 +12,7 @@ pub struct Schedules {
     pub x_battle: Vec<Schedule>,
 }
 
+#[derive(Debug)]
 pub struct Schedule {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -15,14 +20,30 @@ pub struct Schedule {
     pub rule: Rule,
 }
 
+#[derive(Debug)]
 pub struct Stage {
     pub name: String,
     pub id: String,
 }
 
+impl Translatable for Stage {
+    fn translate(mut self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
+        self.name = dict.lookup(&self.id).unwrap_or(self.name);
+        self
+    }
+}
+
+#[derive(Debug)]
 pub struct Rule {
     pub name: String,
     pub id: String,
+}
+
+impl Translatable for Rule {
+    fn translate(mut self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
+        self.name = dict.lookup(&self.id).unwrap_or(self.name);
+        self
+    }
 }
 
 impl From<&raw_data::MatchVsStage> for Stage {

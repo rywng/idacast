@@ -1,18 +1,21 @@
 use color_eyre::eyre::Report;
+use schedules::{Rule, Schedules, Stage};
 use std::fmt::Display;
 
 use color_eyre::Result;
 use reqwest::Url;
 pub mod raw_data;
 pub mod schedules;
-pub mod translation_data;
+pub mod translation;
+
+impl std::error::Error for DataError {}
 
 #[derive(Debug, Clone)]
 enum DataError {
     TranslationError(String),
 }
 
-impl Display for crate::data::DataError {
+impl Display for DataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DataError::TranslationError(id) => {
@@ -21,9 +24,6 @@ impl Display for crate::data::DataError {
         }
     }
 }
-
-impl std::error::Error for DataError {}
-
 async fn fetch_data() -> Result<raw_data::RawData> {
     let res: String = reqwest::get("https://splatoon3.ink/data/schedules.json")
         .await?
@@ -34,45 +34,52 @@ async fn fetch_data() -> Result<raw_data::RawData> {
     Ok(res)
 }
 
-async fn fetch_translation(
-    lang: String,
-) -> Result<translation_data::FlattenedTranslationDictionary> {
+async fn fetch_translation(lang: String) -> Result<translation::FlattenedTranslationDictionary> {
     let base_url: Url = Url::parse("https://splatoon3.ink/data/locale/")?;
     let joined_url: Url = base_url.join(&lang)?;
 
     let res: String = reqwest::get(joined_url).await?.text().await?;
-    let res: translation_data::TranslationData = serde_json::from_str(&res)?;
-    let res: translation_data::FlattenedTranslationDictionary = res.into();
+    let res: translation::TranslationData = serde_json::from_str(&res)?;
+    let res: translation::FlattenedTranslationDictionary = res.into();
 
     Ok(res)
 }
 
-fn lookup_translation(
-    id: String,
-    dictionary: &translation_data::FlattenedTranslationDictionary,
-) -> Result<String> {
-    dictionary
-        .get(&id)
-        .ok_or_else(|| Report::new(DataError::TranslationError(id)))
-        .cloned()
+pub fn get_translation(
+    mut schedules: Schedules,
+    dict: &translation::FlattenedTranslationDictionary,
+) -> Result<Schedules> {
+    schedules.regular.iter_mut();
+
+    todo!()
+}
+
+pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules> {
+    let schedules: Schedules = fetch_data().await?.into();
+
+    match lang {
+        None => Ok(schedules),
+        Some(langcode) => {
+            if langcode == "en-US" {
+                return Ok(schedules);
+            }
+
+            let dict: translation::FlattenedTranslationDictionary =
+                fetch_translation(langcode).await?;
+
+            todo!()
+        }
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use super::{lookup_translation, translation_data::FlattenedTranslationDictionary};
+    use crate::data::{get_schedules, schedules::Schedules};
 
-    #[test]
-    fn test_translation_lookup_with_dictionary() {
-        let dict = FlattenedTranslationDictionary::from([
-            ("VnNTdGFnZS0x".to_string(), "温泉花大峡谷".to_string()),
-            ("VnNTdGFnZS0y".to_string(), "鳗鲶区".to_string()),
-        ]);
+    use super::{translation::FlattenedTranslationDictionary};
 
-        assert_eq!(
-            lookup_translation("VnNTdGFnZS0x".to_string(), &dict).unwrap(),
-            "温泉花大峡谷".to_string()
-        );
-
-        assert!(lookup_translation("nonexistent".to_string(), &dict).is_err());
+    #[tokio::test]
+    async fn test_get_schedules_online() {
+        let _schedules: Schedules = get_schedules(None).await.unwrap();
     }
 }
