@@ -152,6 +152,12 @@ mod test {
         assert_eq!(dict.get("VnNTdGFnZS0y").unwrap(), "鳗鲶区");
         assert_eq!(dict.get("VnNSdWxlLTM=").unwrap(), "真格鱼虎对战");
         assert!(dict.get("non-existent id").is_none());
+
+        let dict: FlattenedTranslationDictionary =
+            fetch_translation("ja-JP".to_owned()).await.unwrap();
+        assert_eq!(dict.get("VnNTdGFnZS0y").unwrap(), "ゴンズイ地区");
+        assert_eq!(dict.get("VnNSdWxlLTM=").unwrap(), "ガチホコバトル");
+        assert!(dict.get("non-existent id").is_none());
     }
 
     #[tokio::test]
