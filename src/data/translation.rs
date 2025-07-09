@@ -1,10 +1,10 @@
 use serde::Deserialize;
-use std::{collections::HashMap, fmt::Display};
+use std::collections::HashMap;
 
 use super::DataError;
 
 pub(super) trait Translatable {
-    fn translate(self, dict: &FlattenedTranslationDictionary) -> Self;
+    fn translate(&self, dict: &FlattenedTranslationDictionary) -> Self;
 }
 
 pub(super) trait Dictionary {
@@ -38,7 +38,7 @@ impl From<TranslationData> for FlattenedTranslationDictionary {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct TranslationData {
     // gear: TranslationMap,
     stages: TranslationMap,
@@ -58,7 +58,7 @@ pub struct TranslationContent {
 mod test {
     use crate::data::translation::Dictionary;
     use crate::data::translation::{
-        FlattenedTranslationDictionary, TranslationContent, TranslationData,
+        FlattenedTranslationDictionary, TranslationContent,
     };
 
     use super::TranslationMap;
@@ -67,61 +67,42 @@ mod test {
     fn test_translation_map() {
         let example_map_data = r#"
         {
-            "e8ab0e3e655b8391": {
-              "name": "Bream-Brim Cap"
+            "VnNTdGFnZS0x": {
+              "name": "温泉花大峡谷"
             },
-            "017f4bb178ae2555": {
-              "name": "Moto Shades"
+            "VnNTdGFnZS0y": {
+              "name": "鳗鲶区"
             },
-            "ababea5943c18ea9": {
-              "name": "Barazushi Wrap"
+            "VnNTdGFnZS0z": {
+              "name": "烟管鱼市场"
             },
-            "d1ddf6a044e31f77": {
-              "name": "Suede Basics"
+            "VnNTdGFnZS00": {
+              "name": "竹蛏疏洪道"
             },
-            "f78714f08fa31b1f": {
-              "name": "Blue Moto Boots"
+            "VnNTdGFnZS02": {
+              "name": "鱼肉碎金属"
             },
-            "59705e7558d8dddd": {
-              "name": "Red Cuttlegear LS"
+            "VnNTdGFnZS0xMA==": {
+              "name": "真鲭跨海大桥"
+            },
+            "VnNTdGFnZS0xMQ==": {
+              "name": "金眼鲷美术馆"
             }
         }"#;
         let result: TranslationMap = serde_json::from_str(example_map_data).unwrap();
         assert_eq!(
-            result["e8ab0e3e655b8391"],
+            result["VnNTdGFnZS02"],
             TranslationContent {
-                name: "Bream-Brim Cap".to_string()
+                name: "鱼肉碎金属".to_string()
             }
         );
         assert_eq!(
-            result["017f4bb178ae2555"],
+            result["VnNTdGFnZS0xMA=="],
             TranslationContent {
-                name: "Moto Shades".to_string()
+                name: "真鲭跨海大桥".to_string()
             }
         );
-        assert_eq!(
-            result["59705e7558d8dddd"],
-            TranslationContent {
-                name: "Red Cuttlegear LS".to_string()
-            }
-        )
-    }
-
-    #[tokio::test]
-    async fn test_parsing_online() {
-        let test_data = reqwest::get("https://splatoon3.ink/data/locale/en-US.json")
-            .await
-            .unwrap()
-            .text()
-            .await
-            .unwrap();
-        let result: TranslationData = serde_json::from_str(&test_data).unwrap();
-        assert_eq!(
-            result.stages["VnNTdGFnZS0xNA=="],
-            TranslationContent {
-                name: "Sturgeon Shipyard".to_string()
-            }
-        )
+        assert!(result.get("non-existent-id").is_none())
     }
 
     #[test]

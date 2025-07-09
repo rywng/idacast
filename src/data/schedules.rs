@@ -27,9 +27,11 @@ pub struct Stage {
 }
 
 impl Translatable for Stage {
-    fn translate(mut self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
-        self.name = dict.lookup(&self.id).unwrap_or(self.name);
-        self
+    fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
+        Stage {
+            name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
+            id: self.id.clone()
+        }
     }
 }
 
@@ -40,9 +42,11 @@ pub struct Rule {
 }
 
 impl Translatable for Rule {
-    fn translate(mut self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
-        self.name = dict.lookup(&self.id).unwrap_or(self.name);
-        self
+    fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
+        Rule {
+            name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
+            id: self.id.clone()
+        }
     }
 }
 
