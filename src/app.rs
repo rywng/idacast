@@ -45,11 +45,11 @@ pub(crate) enum RefreshState {
 }
 
 impl App {
-    pub fn new() -> Self {
+    pub fn new(locale: Option<String>) -> Self {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<AppEvent>();
         App {
             exit: false,
-            locale: None,
+            locale,
             refresh_state: RefreshState::Pending,
             termevents_rx: EventStream::new(),
             schedules: Schedules::default(),

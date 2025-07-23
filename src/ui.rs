@@ -1,7 +1,8 @@
 use std::cmp::max;
 
 use crate::{
-    app::App, app::RefreshState,
+    app::App,
+    app::RefreshState,
     data::{filter_schedules, schedules::Schedule},
 };
 use chrono::{DateTime, Duration, Local, TimeDelta};
@@ -9,6 +10,7 @@ use ratatui::{
     prelude::*,
     widgets::{Block, Paragraph},
 };
+use unicode_width::UnicodeWidthStr;
 
 pub fn draw(app: &App, frame: &mut Frame) {
     let [header_area, bankara_area, battle_area, footer_area] = Layout::default()
@@ -119,9 +121,11 @@ fn render_schedule_widget(
 }
 
 fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
-    let len_left: i32 = area.width as i32 - lhs.len() as i32 - rhs.len() as i32;
-    let spaces = max(len_left, 0) as usize;
-    " ".repeat(spaces)
+    let l_width = lhs.width_cjk();
+    let r_width = rhs.width_cjk();
+    let space_count: i32 = area.width as i32 - l_width as i32 - r_width as i32;
+    let space_count = max(space_count, 0) as usize;
+    " ".repeat(space_count)
 }
 
 fn format_stage_times(schedule: &Schedule) -> Span {
