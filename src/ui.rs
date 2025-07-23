@@ -1,4 +1,3 @@
-use core::time;
 use std::cmp::max;
 
 use crate::{
@@ -23,8 +22,11 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .areas(frame.area());
 
     // Header
-    let title = Line::from("IdaCast".bold());
-    frame.render_widget(title, header_area);
+    let time = Local::now().format("%H:%M:%S.%.f").to_string().bold();
+    let title = "IdaCast".bold();
+    let mid_space = fill_mid_spaces(&title.content, &time.content, header_area).into();
+    let header = Line::from(vec![title, mid_space, time]);
+    frame.render_widget(header, header_area);
 
     // Footer
     let status = match &app.refresh_state {
@@ -107,9 +109,9 @@ fn format_stage_times(schedule: &Schedule) -> Span {
                     }
                 },
                 format!(
-                    "{}m {}s remaining",
+                    "{}m {:.0}s remaining",
                     remaining_time.num_minutes() % 60,
-                    remaining_time.num_seconds() % 60,
+                    (remaining_time.num_milliseconds() % 60000) as f64 / 1000.0,
                 ),
             ]
             .concat(),
@@ -126,8 +128,6 @@ fn format_stage_times(schedule: &Schedule) -> Span {
 
 #[cfg(test)]
 mod test {
-    use core::time;
-
     use ratatui::{
         layout::Rect,
         style::{Style, Stylize},

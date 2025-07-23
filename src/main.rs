@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Local, Utc};
 use color_eyre::{Result, eyre::Report};
 use crossterm::event::{self, Event, EventStream, KeyEvent};
 use data::{
@@ -6,7 +6,7 @@ use data::{
     schedules::{self, Schedules},
 };
 use futures::{StreamExt, future::FutureExt};
-use ratatui::{DefaultTerminal, prelude::*};
+use ratatui::DefaultTerminal;
 
 mod data;
 
@@ -96,6 +96,11 @@ impl App {
     }
 
     async fn handle_events(&mut self) -> Result<()> {
+        // Update every second
+        let time_now = Utc::now();
+        let sleep_duration: std::time::Duration =
+            (DateTime::from_timestamp(time_now.timestamp() + 1, 0).unwrap() - time_now).to_std()?;
+
         tokio::select! {
             term_event = self.termevents_rx.next().fuse() => {
                 self.handle_term_event(term_event.unwrap().unwrap())?;
@@ -103,8 +108,8 @@ impl App {
             app_event = self.appevents_rx.next().fuse() => {
                 self.handle_app_event(app_event.unwrap())?;
             }
-            _ = tokio::time::sleep(tokio::time::Duration::from_millis(100)) => {
-                // Sleep for a short duration to avoid busy waiting.
+            _ = tokio::time::sleep(sleep_duration) => {
+                // Sleep each sercond to keep the clock going
             }
         }
         Ok(())
