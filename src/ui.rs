@@ -11,13 +11,13 @@ use ratatui::{
 };
 
 pub fn draw(app: &App, frame: &mut Frame) {
-    let [header_area, bankara_area, stages_area, footer_area] = Layout::default()
+    let [header_area, bankara_area, battle_area, footer_area] = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Min(1),         // Header: Branding and title
-            Constraint::Min(16),        // Bankara information
-            Constraint::Percentage(50), // Other Stage information
-            Constraint::Min(1),         // Footer: Additional Information (Updates, information)
+            Constraint::Length(1),  // Header: Branding and title
+            Constraint::Min(14), // Bankara information
+            Constraint::Min(14), // Other Stage information
+            Constraint::Length(1),  // Footer: Additional Information (Updates, information)
         ])
         .areas(frame.area());
 
@@ -57,6 +57,31 @@ pub fn draw(app: &App, frame: &mut Frame) {
         filtered_series,
         anarchy_series_area,
         anarchy_series_block,
+        frame,
+    );
+
+    let [x_battle_area, regular_area] = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Fill(1), Constraint::Fill(1)])
+        .flex(layout::Flex::SpaceBetween)
+        .areas(battle_area);
+    let x_battle_block = Block::bordered()
+        .border_style(Style::new().cyan())
+        .title("X Battle");
+    let regular_battle_block = Block::bordered()
+        .border_style(Style::new().green())
+        .title("Regular Battle");
+
+    render_schedule_widget(
+        filter_schedules(&app.schedules.x_battle, DISPLAY_COUNT),
+        x_battle_area,
+        x_battle_block,
+        frame,
+    );
+    render_schedule_widget(
+        filter_schedules(&app.schedules.regular, DISPLAY_COUNT),
+        regular_area,
+        regular_battle_block,
         frame,
     );
 }

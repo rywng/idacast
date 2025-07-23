@@ -153,7 +153,7 @@ pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedu
 
 #[cfg(test)]
 mod test {
-    use chrono::{Duration, Local, Utc};
+    use chrono::{Duration, Utc};
 
     use crate::data::{
         fetch_translation, get_schedules, schedules::Schedules,
