@@ -14,15 +14,17 @@ pub fn draw(app: &App, frame: &mut Frame) {
     let [header_area, bankara_area, battle_area, footer_area] = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Header: Branding and title
-            Constraint::Min(14), // Bankara information
-            Constraint::Min(14), // Other Stage information
-            Constraint::Length(1),  // Footer: Additional Information (Updates, information)
+            Constraint::Length(1), // Header: Branding and title
+            Constraint::Min(5),   // Bankara information
+            Constraint::Min(5),   // Other Stage information
+            Constraint::Length(1), // Footer: Additional Information (Updates, information)
         ])
+        .spacing(1)
+        .flex(layout::Flex::SpaceBetween)
         .areas(frame.area());
 
     // Header
-    let time = Local::now().format("%H:%M:%S.%.f").to_string().bold();
+    let time = Local::now().format("%H:%M:%S%.f").to_string().bold();
     let title = "IdaCast".bold();
     let mid_space = fill_mid_spaces(&title.content, &time.content, header_area).into();
     let header = Line::from(vec![title, mid_space, time]);
@@ -37,14 +39,17 @@ pub fn draw(app: &App, frame: &mut Frame) {
     frame.render_widget(status, footer_area);
 
     // Stages
-    const DISPLAY_COUNT: usize = 4;
     let [anarchy_series_area, anarchy_open_area] = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Fill(1), Constraint::Fill(1)])
+        .flex(layout::Flex::SpaceAround)
+        .spacing(1)
         .areas(bankara_area);
+    let display_count: usize = anarchy_series_area.height as usize / 3; // Assuming every block
+    // have the same size
 
-    let filtered_open = filter_schedules(&app.schedules.anarchy_open, DISPLAY_COUNT);
-    let filtered_series = filter_schedules(&app.schedules.anarchy_series, DISPLAY_COUNT);
+    let filtered_open = filter_schedules(&app.schedules.anarchy_open, display_count);
+    let filtered_series = filter_schedules(&app.schedules.anarchy_series, display_count);
     let anarchy_open_block = Block::bordered()
         .border_style(Style::new().red())
         .title("Anarchy Open");
@@ -63,7 +68,8 @@ pub fn draw(app: &App, frame: &mut Frame) {
     let [x_battle_area, regular_area] = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Fill(1), Constraint::Fill(1)])
-        .flex(layout::Flex::SpaceBetween)
+        .flex(layout::Flex::SpaceAround)
+        .spacing(1)
         .areas(battle_area);
     let x_battle_block = Block::bordered()
         .border_style(Style::new().cyan())
@@ -73,13 +79,13 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .title("Regular Battle");
 
     render_schedule_widget(
-        filter_schedules(&app.schedules.x_battle, DISPLAY_COUNT),
+        filter_schedules(&app.schedules.x_battle, display_count),
         x_battle_area,
         x_battle_block,
         frame,
     );
     render_schedule_widget(
-        filter_schedules(&app.schedules.regular, DISPLAY_COUNT),
+        filter_schedules(&app.schedules.regular, display_count),
         regular_area,
         regular_battle_block,
         frame,
