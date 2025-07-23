@@ -174,13 +174,13 @@ mod test {
             fetch_translation("zh-CN".to_owned()).await.unwrap();
         assert_eq!(dict.get("VnNTdGFnZS0y").unwrap(), "鳗鲶区");
         assert_eq!(dict.get("VnNSdWxlLTM=").unwrap(), "真格鱼虎对战");
-        assert!(dict.get("non-existent id").is_none());
+        assert!(!dict.contains_key("non-existent id"));
 
         let dict: FlattenedTranslationDictionary =
             fetch_translation("ja-JP".to_owned()).await.unwrap();
         assert_eq!(dict.get("VnNTdGFnZS0y").unwrap(), "ゴンズイ地区");
         assert_eq!(dict.get("VnNSdWxlLTM=").unwrap(), "ガチホコバトル");
-        assert!(dict.get("non-existent id").is_none());
+        assert!(!dict.contains_key("non-existent id"));
     }
 
     #[tokio::test]
@@ -236,7 +236,7 @@ mod test {
         assert_eq!(filtered[2], get_test_schedule(time_now, 2));
         assert_ne!(filtered[2], get_test_schedule(time_now, 3));
 
-        let filtered_alt = filter_schedules(&sample_schedules, std::usize::MAX).unwrap();
+        let filtered_alt = filter_schedules(&sample_schedules, usize::MAX).unwrap();
         assert_eq!(filtered_alt.len(), 14)
     }
 }

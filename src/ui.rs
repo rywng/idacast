@@ -1,7 +1,7 @@
 use std::cmp::max;
 
 use crate::{
-    App, RefreshState,
+    app::App, app::RefreshState,
     data::{filter_schedules, schedules::Schedule},
 };
 use chrono::{DateTime, Duration, Local, TimeDelta};
