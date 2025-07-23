@@ -100,7 +100,7 @@ mod test {
                 name: "真鲭跨海大桥".to_string()
             }
         );
-        assert!(result.get("non-existent-id").is_none())
+        assert!(!result.contains_key("non-existent-id"));
     }
 
     #[test]
