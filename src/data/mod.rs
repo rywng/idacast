@@ -144,7 +144,7 @@ pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedu
             let end = min(start.saturating_add(count), schedules.len());
             Some(&schedules[start..end])
         }
-        None => return None,
+        None => None,
     }
 }
 

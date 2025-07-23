@@ -57,31 +57,27 @@ impl App {
 
     pub fn refresh_schedule(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
         // TODO: Error handling
-        tokio::spawn(async move {
-            if let Err(_) = tx.send(AppEvent::Refresh(RefreshState::Pending)) {
-                return;
+        tokio::spawn(App::handle_refresh(tx, lang));
+
+        Ok(())
+    }
+
+    async fn handle_refresh(
+        tx: UnboundedSender<AppEvent>,
+        lang: Option<String>,
+    ) -> Result<()> {
+        tx.send(AppEvent::Refresh(RefreshState::Pending))?;
+
+        match get_schedules(lang).await {
+            Ok(schedules) => {
+                tx.send(AppEvent::ScheduleLoad(schedules))?;
+
+                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))?;
             }
-
-            match get_schedules(lang).await {
-                Ok(schedules) => {
-                    if let Err(_) = tx.send(AppEvent::ScheduleLoad(schedules)) {
-                        return;
-                    }
-
-                    if let Err(_) =
-                        tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))
-                    {
-                        return;
-                    }
-                }
-                Err(err) => {
-                    if let Err(_) = tx.send(AppEvent::Refresh(RefreshState::Error(err))) {
-                        return;
-                    }
-                }
+            Err(err) => {
+                tx.send(AppEvent::Refresh(RefreshState::Error(err)))?;
             }
-        });
-
+        }
         Ok(())
     }
 
@@ -89,7 +85,7 @@ impl App {
     pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         App::refresh_schedule(self.appevents_tx.clone(), self.locale.clone())?;
         while !self.exit {
-            terminal.draw(|frame| draw(&self, frame))?;
+            terminal.draw(|frame| draw(self, frame))?;
             self.handle_events().await?;
         }
         Ok(())

@@ -15,8 +15,8 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(1), // Header: Branding and title
-            Constraint::Min(5),   // Bankara information
-            Constraint::Min(5),   // Other Stage information
+            Constraint::Min(5),    // Bankara information
+            Constraint::Min(5),    // Other Stage information
             Constraint::Length(1), // Footer: Additional Information (Updates, information)
         ])
         .spacing(1)
@@ -131,7 +131,7 @@ fn format_stage_times(schedule: &Schedule) -> Span {
     let remaining_time = converted_end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
         Span::from(
-            vec![
+            [
                 {
                     if remaining_time.num_hours() != 0 {
                         format!("{}h ", remaining_time.num_hours())
