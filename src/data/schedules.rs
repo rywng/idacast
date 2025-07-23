@@ -30,7 +30,7 @@ impl Translatable for Stage {
     fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
         Stage {
             name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
-            id: self.id.clone()
+            id: self.id.clone(),
         }
     }
 }
@@ -45,7 +45,7 @@ impl Translatable for Rule {
     fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
         Rule {
             name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
-            id: self.id.clone()
+            id: self.id.clone(),
         }
     }
 }

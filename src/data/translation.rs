@@ -57,9 +57,7 @@ pub struct TranslationContent {
 #[cfg(test)]
 mod test {
     use crate::data::translation::Dictionary;
-    use crate::data::translation::{
-        FlattenedTranslationDictionary, TranslationContent,
-    };
+    use crate::data::translation::{FlattenedTranslationDictionary, TranslationContent};
 
     use super::TranslationMap;
 
