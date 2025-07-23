@@ -1,6 +1,7 @@
-use schedules::Schedules;
+use chrono::Local;
+use schedules::{Schedule, Schedules};
 use serde_json::Value;
-use std::fmt::Display;
+use std::{cmp::min, fmt::Display};
 use translation::Translatable;
 
 use color_eyre::{Report, Result, eyre::Ok};
@@ -132,11 +133,36 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     }
 }
 
+pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedule]> {
+    let mut start: Option<usize> = None;
+    let time_now = Local::now();
+    for (index, schedule) in schedules.iter().enumerate() {
+        if schedule.start_time <= time_now && schedule.end_time >= time_now {
+            start = Some(index);
+            break;
+        }
+    }
+    match start {
+        Some(start) => {
+            let end = min(start + count, schedules.len());
+            Some(&schedules[start..end])
+        }
+        None => return None,
+    }
+}
+
 #[cfg(test)]
 mod test {
+    use chrono::{Duration, Local, Utc};
+
     use crate::data::{
         fetch_translation, get_schedules, schedules::Schedules,
         translation::FlattenedTranslationDictionary,
+    };
+
+    use super::{
+        filter_schedules,
+        schedules::{Rule, Schedule, Stage},
     };
 
     #[tokio::test]
@@ -165,5 +191,53 @@ mod test {
         let _schedules_translated: Schedules =
             get_schedules(Some("zh-CN".to_owned())).await.unwrap();
         dbg!(&_schedules_translated);
+    }
+
+    fn get_test_schedule(time_now: chrono::DateTime<Utc>, i: i64) -> Schedule {
+        Schedule {
+            start_time: time_now - Duration::minutes(90) + Duration::hours(i * 2),
+            end_time: time_now + Duration::minutes(30) + Duration::hours(i * 2),
+            stages: get_test_stages(i.try_into().unwrap()),
+            rule: get_test_rule(),
+        }
+    }
+
+    fn get_test_stages(start: isize) -> Vec<Stage> {
+        let mut sample_stages = Vec::new();
+        for i in start..start + 2 {
+            sample_stages.push(Stage {
+                name: format!("test stage {i}"),
+                id: format!("test_{i}"),
+            });
+        }
+        sample_stages
+    }
+
+    fn get_test_rule() -> Rule {
+        Rule {
+            name: "test rule".to_string(),
+            id: "test_rule".to_string(),
+        }
+    }
+
+    #[test]
+    fn test_filter_schedule_by_time() {
+        let time_now = Utc::now();
+
+        let mut sample_schedules = Vec::new();
+        for i in -2..14 {
+            // Usually 12 in the api (http://splatoon3.ink/data/schedules.json)
+            sample_schedules.push(get_test_schedule(time_now, i));
+        }
+
+        let filtered = filter_schedules(&sample_schedules, 3).unwrap();
+        dbg!(&filtered);
+
+        assert_eq!(filtered.len(), 3);
+        assert_ne!(filtered[0], get_test_schedule(time_now, -1));
+        assert_eq!(filtered[0], get_test_schedule(time_now, 0));
+        assert_eq!(filtered[1], get_test_schedule(time_now, 1));
+        assert_eq!(filtered[2], get_test_schedule(time_now, 2));
+        assert_ne!(filtered[2], get_test_schedule(time_now, 3));
     }
 }
