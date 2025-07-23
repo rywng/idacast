@@ -78,9 +78,6 @@ pub fn translate_schedules(
     mut schedules: Schedules,
     dict: &translation::FlattenedTranslationDictionary,
 ) -> Result<Schedules> {
-    for schedule in &mut schedules.regular {
-        translate_schedule(dict, schedule);
-    }
     schedules
         .regular
         .iter_mut()
@@ -144,7 +141,7 @@ pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedu
     }
     match start {
         Some(start) => {
-            let end = min(start + count, schedules.len());
+            let end = min(start.saturating_add(count), schedules.len());
             Some(&schedules[start..end])
         }
         None => return None,
@@ -231,7 +228,6 @@ mod test {
         }
 
         let filtered = filter_schedules(&sample_schedules, 3).unwrap();
-        dbg!(&filtered);
 
         assert_eq!(filtered.len(), 3);
         assert_ne!(filtered[0], get_test_schedule(time_now, -1));
@@ -239,5 +235,8 @@ mod test {
         assert_eq!(filtered[1], get_test_schedule(time_now, 1));
         assert_eq!(filtered[2], get_test_schedule(time_now, 2));
         assert_ne!(filtered[2], get_test_schedule(time_now, 3));
+
+        let filtered_alt = filter_schedules(&sample_schedules, std::usize::MAX).unwrap();
+        assert_eq!(filtered_alt.len(), 14)
     }
 }
