@@ -8,7 +8,6 @@ use data::{
 use futures::{StreamExt, future::FutureExt};
 use ratatui::{DefaultTerminal, prelude::*};
 
-#[allow(unused_variables, dead_code)]
 mod data;
 
 mod ui;

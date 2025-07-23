@@ -12,7 +12,7 @@ pub struct Schedules {
     pub x_battle: Vec<Schedule>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Schedule {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -20,7 +20,7 @@ pub struct Schedule {
     pub rule: Rule,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Stage {
     pub name: String,
     pub id: String,
@@ -35,7 +35,7 @@ impl Translatable for Stage {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Rule {
     pub name: String,
     pub id: String,
