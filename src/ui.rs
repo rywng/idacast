@@ -1,7 +1,11 @@
+use core::time;
+use std::cmp::max;
+
 use crate::{
     App, RefreshState,
     data::{filter_schedules, schedules::Schedule},
 };
+use chrono::{DateTime, Duration, Local, TimeDelta};
 use ratatui::{
     prelude::*,
     widgets::{Block, Paragraph},
@@ -12,7 +16,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Min(1),         // Header: Branding and title
-            Constraint::Percentage(50), // Bankara information
+            Constraint::Min(16),        // Bankara information
             Constraint::Percentage(50), // Other Stage information
             Constraint::Min(1),         // Footer: Additional Information (Updates, information)
         ])
@@ -32,9 +36,9 @@ pub fn draw(app: &App, frame: &mut Frame) {
 
     // Stages
     const DISPLAY_COUNT: usize = 4;
-    let [anarchy_open_area, anarchy_series_area] = Layout::default()
+    let [anarchy_series_area, anarchy_open_area] = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .constraints([Constraint::Fill(1), Constraint::Fill(1)])
         .areas(bankara_area);
 
     let filtered_open = filter_schedules(&app.schedules.anarchy_open, DISPLAY_COUNT);
@@ -46,28 +50,110 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .border_style(Style::new().red())
         .title("Anarchy Series");
 
-    frame.render_widget(
-        get_schedule_widget(filtered_open).block(anarchy_open_block),
-        anarchy_open_area,
-    );
-    frame.render_widget(
-        get_schedule_widget(filtered_series).block(anarchy_series_block),
+    render_schedule_widget(filtered_open, anarchy_open_area, anarchy_open_block, frame);
+    render_schedule_widget(
+        filtered_series,
         anarchy_series_area,
+        anarchy_series_block,
+        frame,
     );
 }
 
-fn get_schedule_widget(schedules: Option<&[Schedule]>) -> Paragraph {
-    match schedules {
+fn render_schedule_widget(
+    schedules: Option<&[Schedule]>,
+    area: Rect,
+    block: Block,
+    frame: &mut Frame,
+) {
+    let sub_area = block.inner(area);
+    let content = match schedules {
         Some(schedules) => {
             let mut text: Vec<Line> = Vec::new();
             for schedule in schedules {
-                text.push(Line::from(vec![schedule.rule.name.clone().bold()]));
+                let rule = schedule.rule.name.clone().bold().underlined();
+                let time = format_stage_times(schedule).italic();
+                let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
+                text.push(Line::from(vec![rule, space, time]));
                 for stage in &schedule.stages {
-                    text.push(stage.name.clone().into());
+                    text.push(format!("- {}", stage.name).into());
                 }
             }
             Paragraph::new(text)
         }
         None => Paragraph::new("Loading..."),
+    };
+    frame.render_widget(content.block(block), area);
+}
+
+fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
+    let len_left: i32 = area.width as i32 - lhs.len() as i32 - rhs.len() as i32;
+    let spaces = max(len_left, 0) as usize;
+    " ".repeat(spaces)
+}
+
+fn format_stage_times(schedule: &Schedule) -> Span {
+    let time_now = Local::now();
+    let converted_start_time: DateTime<Local> = DateTime::from(schedule.start_time);
+    let converted_end_time: DateTime<Local> = DateTime::from(schedule.end_time);
+    let remaining_time = converted_end_time - time_now;
+    if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
+        Span::from(
+            vec![
+                {
+                    if remaining_time.num_hours() != 0 {
+                        format!("{}h ", remaining_time.num_hours())
+                    } else {
+                        "".to_string()
+                    }
+                },
+                format!(
+                    "{}m {}s remaining",
+                    remaining_time.num_minutes() % 60,
+                    remaining_time.num_seconds() % 60,
+                ),
+            ]
+            .concat(),
+        )
+    } else {
+        format!(
+            "{} - {}",
+            converted_start_time.format("%H:%M"),
+            converted_end_time.format("%H:%M")
+        )
+        .into()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use core::time;
+
+    use ratatui::{
+        layout::Rect,
+        style::{Style, Stylize},
+        widgets::Block,
+    };
+
+    use crate::ui::fill_mid_spaces;
+
+    #[test]
+    fn test_fill_mid_spaces() {
+        let rule = "Splat Zones".bold().underlined();
+        let time = "7m 17s remaining".italic();
+        let time_alt = "22:00 - 00:00".italic();
+        let area = Rect::new(0, 0, 64, 24);
+        let block = Block::bordered()
+            .border_style(Style::new().red())
+            .title("Anarchy Open");
+        let subarea = block.inner(area);
+
+        assert_eq!(
+            fill_mid_spaces(&rule.content, &time.content, subarea),
+            "                                   ".to_string()
+        );
+        assert_eq!(
+            fill_mid_spaces(&rule.content, &time_alt.content, subarea),
+            "                                      ".to_string()
+        );
     }
 }
