@@ -19,7 +19,7 @@ struct Args {
 }
 
 impl Args {
-    fn set_language(&mut self) {
+    fn infer_language(&mut self) {
         match &self.language {
             Some(_) => {}
             None => self.language = sys_locale::get_locale(),
@@ -30,7 +30,7 @@ impl Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut args = Args::parse();
-    args.set_language();
+    args.infer_language();
 
     color_eyre::install()?;
     let mut terminal = ratatui::init();

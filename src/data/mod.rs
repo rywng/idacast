@@ -1,4 +1,5 @@
 use chrono::Local;
+use futures::join;
 use schedules::{Schedule, Schedules};
 use serde_json::Value;
 use std::{cmp::min, fmt::Display};
@@ -112,19 +113,19 @@ fn translate_schedule(
 }
 
 pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules> {
-    let schedules: Schedules = fetch_data().await?.into();
+    let raw_schedules_fut = fetch_data();
 
     match lang {
-        None => Ok(schedules),
+        None => Ok(raw_schedules_fut.await?.into()),
         Some(langcode) => {
             if langcode == "en-US" {
-                return Ok(schedules);
+                return Ok(raw_schedules_fut.await?.into());
             }
 
-            let dict: translation::FlattenedTranslationDictionary =
-                fetch_translation(langcode).await?;
+            let dict_fut = fetch_translation(langcode);
+            let (raw_schedules, dict) = join!(raw_schedules_fut, dict_fut);
 
-            let translated: Schedules = translate_schedules(schedules, &dict)?;
+            let translated: Schedules = translate_schedules(raw_schedules?.into(), &dict?)?;
             Ok(translated)
         }
     }
