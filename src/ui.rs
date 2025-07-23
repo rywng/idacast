@@ -26,18 +26,31 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .areas(frame.area());
 
     // Header
-    let time = Local::now().format("%H:%M:%S%.f").to_string().bold();
-    let title = "IdaCast".bold();
-    let mid_space = fill_mid_spaces(&title.content, &time.content, header_area).into();
-    let header = Line::from(vec![title, mid_space, time]);
+    let time = Local::now().format("%H:%M:%S").to_string().fg(Color::Gray);
+    let mut title = [
+        "Ida".bold().fg(Color::Green),
+        "Cast".fg(Color::Magenta).italic(),
+    ];
+    let mid_space = fill_mid_spaces("IdaCast", &time.content, header_area).into();
+    let header = Line::from({
+        let mut res = vec![mid_space, time];
+        title.reverse();
+        for title_part in title {
+            res.insert(0, title_part);
+        }
+        res
+    });
     frame.render_widget(header, header_area);
 
     // Footer
     let status = match &app.refresh_state {
-        RefreshState::Pending => Line::from("updating"),
-        RefreshState::Completed(time) => Line::from(format!("last update {time}")),
-        RefreshState::Error(report) => Line::from(format!("failed to update: {report}")),
-    };
+        RefreshState::Pending => Line::from("Updating..."),
+        RefreshState::Completed(time) => {
+            Line::from(format!("Last updated: {}", time.format("%H:%M:%S")))
+        }
+        RefreshState::Error(report) => Line::from(format!("Failed to update: {report}")),
+    }
+    .fg(Color::Gray);
     frame.render_widget(status, footer_area);
 
     // Stages
