@@ -10,12 +10,13 @@
 
 View splatoon3's battle stages from your terminal.
 
+[![asciicast](https://asciinema.org/a/eUcpsXutWhy30un36Vh0EvHEV.svg)](https://asciinema.org/a/eUcpsXutWhy30un36Vh0EvHEV)
+
 Data is sourced from [splatoon3.ink](https://splatoon3.ink).
 
 ## TODO
 
 - Add `lib.rs` export for code reuse
-- Upload it to web using [ratzilla](https://github.com/orhun/ratzilla)
 
 ## Development
 
