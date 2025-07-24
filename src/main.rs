@@ -35,12 +35,12 @@ impl Args {
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
-    let mut terminal = ratatui::init();
 
     // Parse arguments and setup
     let mut args = Args::parse();
     args.infer_language();
 
+    let mut terminal = ratatui::init();
     if !args.no_mouse.unwrap_or(false) {
         stdout().execute(event::EnableMouseCapture)?;
     }
