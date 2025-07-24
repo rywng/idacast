@@ -131,7 +131,11 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     }
 }
 
-pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedule]> {
+pub fn filter_schedules(
+    schedules: &[Schedule],
+    count: usize,
+    shift: Option<usize>,
+) -> Option<&[Schedule]> {
     let mut start: Option<usize> = None;
     let time_now = Local::now();
     for (index, schedule) in schedules.iter().enumerate() {
@@ -142,7 +146,13 @@ pub fn filter_schedules(schedules: &[Schedule], count: usize) -> Option<&[Schedu
     }
     match start {
         Some(start) => {
-            let end = min(start.saturating_add(count), schedules.len());
+            let end = min(
+                start
+                    .saturating_add(count)
+                    .saturating_add(shift.unwrap_or(0)),
+                schedules.len(),
+            );
+            let start = min(start.saturating_add(shift.unwrap_or(0)), end);
             Some(&schedules[start..end])
         }
         None => None,
@@ -228,7 +238,7 @@ mod test {
             sample_schedules.push(get_test_schedule(time_now, i));
         }
 
-        let filtered = filter_schedules(&sample_schedules, 3).unwrap();
+        let filtered = filter_schedules(&sample_schedules, 3, None).unwrap();
 
         assert_eq!(filtered.len(), 3);
         assert_ne!(filtered[0], get_test_schedule(time_now, -1));
@@ -237,7 +247,18 @@ mod test {
         assert_eq!(filtered[2], get_test_schedule(time_now, 2));
         assert_ne!(filtered[2], get_test_schedule(time_now, 3));
 
-        let filtered_alt = filter_schedules(&sample_schedules, usize::MAX).unwrap();
-        assert_eq!(filtered_alt.len(), 14)
+        let filtered_alt = filter_schedules(&sample_schedules, usize::MAX, None).unwrap();
+        assert_eq!(filtered_alt.len(), 14);
+
+        let filtered_shift = filter_schedules(&sample_schedules, 25, Some(1)).unwrap();
+        assert_eq!(filtered_shift.len(), 13);
+        assert_eq!(filtered_shift[0], get_test_schedule(time_now, 1));
+
+        let filtered_shift = filter_schedules(&sample_schedules, 3, Some(1)).unwrap();
+        assert_eq!(filtered_shift.len(), 3);
+        assert_eq!(filtered_shift[0], get_test_schedule(time_now, 1));
+
+        let filtered_empty = filter_schedules(&sample_schedules, 3, Some(64)).unwrap();
+        assert!(filtered_empty.is_empty());
     }
 }

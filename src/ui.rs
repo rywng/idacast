@@ -53,8 +53,8 @@ pub fn draw(app: &App, frame: &mut Frame) {
     let display_count: usize = anarchy_series_area.height as usize / 3; // Assuming every block
     // have the same size
 
-    let filtered_open = filter_schedules(&app.schedules.anarchy_open, display_count);
-    let filtered_series = filter_schedules(&app.schedules.anarchy_series, display_count);
+    let filtered_open = filter_schedules(&app.schedules.anarchy_open, display_count, None);
+    let filtered_series = filter_schedules(&app.schedules.anarchy_series, display_count, None);
     let anarchy_open_block = Block::bordered()
         .border_style(Style::new().red())
         .title("Anarchy Open");
@@ -84,13 +84,13 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .title("Regular Battle");
 
     render_schedule_widget(
-        filter_schedules(&app.schedules.x_battle, display_count),
+        filter_schedules(&app.schedules.x_battle, display_count, None),
         x_battle_area,
         x_battle_block,
         frame,
     );
     render_schedule_widget(
-        filter_schedules(&app.schedules.regular, display_count),
+        filter_schedules(&app.schedules.regular, display_count, None),
         regular_area,
         regular_battle_block,
         frame,

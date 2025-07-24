@@ -18,6 +18,9 @@ use data::schedules::Schedules;
 use crate::data::{self, get_schedules};
 use crate::ui::draw;
 
+// Update the schedules every 4 hours. There's no reason to change it.
+const AUTO_UPDATE_HOURS: u8 = 4;
+
 #[derive(Debug)]
 pub(crate) struct App {
     pub(crate) exit: bool,
@@ -86,7 +89,7 @@ impl App {
 
     /// runs the application's main loop until the user quits
     pub async fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        App::refresh_schedule(self.appevents_tx.clone(), self.locale.clone())?;
+        App::register_auto_update(self.appevents_tx.clone(), self.locale.clone())?;
         while !self.exit {
             terminal.draw(|frame| draw(self, frame))?;
             self.handle_events().await?;
@@ -94,11 +97,35 @@ impl App {
         Ok(())
     }
 
+    fn register_auto_update(tx: UnboundedSender<AppEvent>, locale: Option<String>) -> Result<()> {
+        tokio::spawn(App::handle_auto_update(tx.clone(), locale.clone()));
+
+        Ok(())
+    }
+
+    async fn handle_auto_update(
+        tx: UnboundedSender<AppEvent>,
+        locale: Option<String>,
+    ) -> Result<()> {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
+            60 * 60 * AUTO_UPDATE_HOURS as u64,
+        ));
+
+        loop {
+            interval.tick().await;
+            App::refresh_schedule(tx.clone(), locale.clone())?;
+        }
+    }
+
     pub(crate) async fn handle_events(&mut self) -> Result<()> {
-        // Update every second
-        let time_now = Utc::now();
-        let sleep_duration: std::time::Duration =
-            (DateTime::from_timestamp(time_now.timestamp() + 1, 0).unwrap() - time_now).to_std()?;
+        // Re-draw the TUI every second to update the clock
+        let sleep_duration_until_next_second = {
+            let time_now = Utc::now();
+            let sleep_duration: std::time::Duration =
+                (DateTime::from_timestamp(time_now.timestamp() + 1, 0).unwrap() - time_now)
+                    .to_std()?;
+            sleep_duration
+        };
 
         tokio::select! {
             term_event = self.termevents_rx.next().fuse() => {
@@ -107,7 +134,7 @@ impl App {
             app_event = self.appevents_rx.next().fuse() => {
                 self.handle_app_event(app_event.unwrap())?;
             }
-            _ = tokio::time::sleep(sleep_duration) => {
+            _ = tokio::time::sleep(sleep_duration_until_next_second) => {
                 // Sleep each sercond to keep the clock going
             }
         }
