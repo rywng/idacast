@@ -1,17 +1,12 @@
 use chrono::{DateTime, Local, Utc};
 use color_eyre::{Result, eyre::Report};
-use crossterm::event::KeyEvent;
-use crossterm::event::{self};
+use crossterm::event::{self, Event, EventStream, KeyEvent, MouseButton, MouseEvent};
 use data::schedules::{self};
 use futures::{StreamExt, future::FutureExt};
 use ratatui::DefaultTerminal;
 
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-
-use crossterm::event::Event;
-
-use crossterm::event::EventStream;
 
 use data::schedules::Schedules;
 
@@ -78,10 +73,7 @@ impl App {
         Ok(())
     }
 
-    async fn handle_refresh(
-        tx: UnboundedSender<AppEvent>,
-        lang: Option<String>,
-    ) -> Result<()> {
+    async fn handle_refresh(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
         tx.send(AppEvent::Refresh(RefreshState::Pending))?;
 
         match get_schedules(lang).await {
@@ -162,10 +154,32 @@ impl App {
         Ok(())
     }
 
-    fn handle_term_event(&mut self, event: crossterm::event::Event) -> Result<()> {
+    fn handle_term_event(&mut self, event: Event) -> Result<()> {
         match event {
             Event::Key(key_event) => {
                 self.handle_key_event(key_event)?;
+                Ok(())
+            }
+            Event::Mouse(mouse_event) => {
+                self.handle_mouse_event(mouse_event)?;
+                Ok(())
+            }
+            _ => Ok(()),
+        }
+    }
+
+    fn handle_mouse_event(&mut self, mouse_event: MouseEvent) -> Result<()> {
+        match mouse_event.kind {
+            crossterm::event::MouseEventKind::Down(MouseButton::Right) => {
+                self.handle_scroll(ScrollOperation::Reset);
+                Ok(())
+            }
+            crossterm::event::MouseEventKind::ScrollDown => {
+                self.handle_scroll(ScrollOperation::Down);
+                Ok(())
+            }
+            crossterm::event::MouseEventKind::ScrollUp => {
+                self.handle_scroll(ScrollOperation::Up);
                 Ok(())
             }
             _ => Ok(()),
