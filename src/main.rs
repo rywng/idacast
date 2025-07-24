@@ -48,5 +48,6 @@ async fn main() -> Result<()> {
     let result = app::App::new(args.language).run(&mut terminal).await;
 
     ratatui::restore();
+    stdout().execute(event::DisableMouseCapture)?;
     result
 }
