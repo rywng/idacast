@@ -1,8 +1,7 @@
 use std::cmp::max;
 
 use crate::{
-    app::App,
-    app::RefreshState,
+    app::{App, RefreshState},
     data::{filter_schedules, schedules::Schedule},
 };
 use chrono::{DateTime, Duration, Local, TimeDelta};
@@ -26,35 +25,72 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .areas(frame.area());
 
     // Header
-    let time = Local::now().format("%H:%M:%S%.f").to_string().fg(Color::Gray);
+    render_header(frame, header_area);
+
+    // Footer
+    render_footer(app, frame, footer_area);
+    // Stages
+    render_stages(app, frame, bankara_area, battle_area);
+}
+
+fn render_header(frame: &mut Frame<'_>, header_area: Rect) {
+    let time = Local::now()
+        .format("%H:%M:%S%.f")
+        .to_string()
+        .fg(Color::Gray);
     let title = "IdaCast".bold().fg(Color::Green);
     let mid_space = fill_mid_spaces(&title.content, &time.content, header_area).into();
     let header = Line::from(vec![title, mid_space, time]);
     frame.render_widget(header, header_area);
+}
 
-    // Footer
+fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
     let status = match &app.refresh_state {
-        RefreshState::Pending => Line::from("Updating..."),
+        RefreshState::Pending => Span::from("Updating..."),
         RefreshState::Completed(time) => {
-            Line::from(format!("Last updated: {}", time.format("%H:%M:%S")))
+            Span::from(format!("Last updated: {}", time.format("%H:%M:%S")))
         }
-        RefreshState::Error(report) => Line::from(format!("Failed to update: {report}")),
+        RefreshState::Error(report) => Span::from(format!("Failed to update: {report}")),
     }
     .fg(Color::Gray);
-    frame.render_widget(status, footer_area);
+    let scroll_info = if app.scroll_offset == 0 || app.schedules_count == 0 {
+        "(j/k to scroll)".to_string()
+    } else {
+        format!(
+            "(^L to reset scroll) lines {}/{}",
+            app.scroll_offset.saturating_add(1),
+            app.schedules_count
+                .saturating_sub(app.get_past_schedule_count()),
+        )
+    }
+    .italic()
+    .fg(Color::Gray);
+    let mid_space = fill_mid_spaces(&status.content, &scroll_info.content, footer_area);
+    let footer_text = Line::from(vec![status, mid_space.into(), scroll_info]);
+    frame.render_widget(footer_text, footer_area);
+}
 
-    // Stages
+fn render_stages(app: &App, frame: &mut Frame<'_>, bankara_area: Rect, battle_area: Rect) {
     let [anarchy_series_area, anarchy_open_area] = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Fill(1), Constraint::Fill(1)])
         .flex(layout::Flex::SpaceAround)
         .spacing(1)
         .areas(bankara_area);
-    let display_count: usize = anarchy_series_area.height as usize / 3; // Assuming every block
+    let display_count: usize = anarchy_series_area.height as usize / 3;
+    // Assuming every block
     // have the same size
 
-    let filtered_open = filter_schedules(&app.schedules.anarchy_open, display_count, None);
-    let filtered_series = filter_schedules(&app.schedules.anarchy_series, display_count, None);
+    let filtered_open = filter_schedules(
+        &app.schedules.anarchy_open,
+        display_count,
+        Some(app.scroll_offset),
+    );
+    let filtered_series = filter_schedules(
+        &app.schedules.anarchy_series,
+        display_count,
+        Some(app.scroll_offset),
+    );
     let anarchy_open_block = Block::bordered()
         .border_style(Style::new().red())
         .title("Anarchy Open");
@@ -84,13 +120,21 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .title("Regular Battle");
 
     render_schedule_widget(
-        filter_schedules(&app.schedules.x_battle, display_count, None),
+        filter_schedules(
+            &app.schedules.x_battle,
+            display_count,
+            Some(app.scroll_offset),
+        ),
         x_battle_area,
         x_battle_block,
         frame,
     );
     render_schedule_widget(
-        filter_schedules(&app.schedules.regular, display_count, None),
+        filter_schedules(
+            &app.schedules.regular,
+            display_count,
+            Some(app.scroll_offset),
+        ),
         regular_area,
         regular_battle_block,
         frame,

@@ -25,6 +25,9 @@ const AUTO_UPDATE_HOURS: u8 = 4;
 pub(crate) struct App {
     pub(crate) exit: bool,
     pub(crate) locale: Option<String>,
+    pub(crate) scroll_offset: usize,
+    /// the length of the longest schedules fetched, doesn't take account into past schedules
+    pub(crate) schedules_count: usize,
     pub(crate) refresh_state: RefreshState,
     pub(crate) schedules: schedules::Schedules,
     pub(crate) appevents_tx: UnboundedSender<AppEvent>,
@@ -47,12 +50,20 @@ pub(crate) enum RefreshState {
     Error(Report),
 }
 
+enum ScrollOperation {
+    Up,
+    Down,
+    Reset,
+}
+
 impl App {
     pub fn new(locale: Option<String>) -> Self {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<AppEvent>();
         App {
             exit: false,
             locale,
+            schedules_count: 0,
+            scroll_offset: 0,
             refresh_state: RefreshState::Pending,
             termevents_rx: EventStream::new(),
             schedules: Schedules::default(),
@@ -77,7 +88,6 @@ impl App {
         match get_schedules(lang).await {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
-
                 tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))?;
             }
             Err(err) => {
@@ -135,7 +145,7 @@ impl App {
                 self.handle_app_event(app_event.unwrap())?;
             }
             _ = tokio::time::sleep(sleep_duration_until_next_second) => {
-                // Sleep each sercond to keep the clock going
+                // Sleep each second to keep the clock going
             }
         }
         Ok(())
@@ -145,7 +155,10 @@ impl App {
         match event {
             AppEvent::Tick => todo!(),
             AppEvent::Refresh(refresh_state) => self.refresh_state = refresh_state,
-            AppEvent::ScheduleLoad(schedules) => self.schedules = schedules,
+            AppEvent::ScheduleLoad(schedules) => {
+                self.schedules = schedules;
+                self.schedules_count = self.get_schedules_count().unwrap_or(0);
+            }
         }
 
         Ok(())
@@ -162,21 +175,90 @@ impl App {
     }
 
     pub(crate) fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
-        match key_event.code {
-            event::KeyCode::Char(char) => match char {
-                'q' => self.quit(),
-                'r' => App::refresh_schedule(self.appevents_tx.clone(), self.locale.clone())?,
+        match key_event.modifiers {
+            event::KeyModifiers::CONTROL => {
+                if let event::KeyCode::Char(char) = key_event.code {
+                    match char {
+                        'l' => self.handle_scroll(ScrollOperation::Reset),
+                        'c' => self.quit(),
+                        _ => {}
+                    }
+                }
+            }
+            event::KeyModifiers::NONE => match key_event.code {
+                event::KeyCode::Char(char) => match char {
+                    'q' => self.quit(),
+                    'r' => App::refresh_schedule(self.appevents_tx.clone(), self.locale.clone())?,
+                    'k' => self.handle_scroll(ScrollOperation::Up),
+                    'j' => self.handle_scroll(ScrollOperation::Down),
+                    _ => {}
+                },
+                event::KeyCode::Esc => {
+                    self.quit();
+                }
                 _ => {}
             },
-            event::KeyCode::Esc => {
-                self.quit();
-            }
             _ => {}
-        };
+        }
         Ok(())
+    }
+
+    fn handle_scroll(&mut self, operation: ScrollOperation) {
+        match operation {
+            ScrollOperation::Up => {
+                self.scroll_offset = self
+                    .scroll_offset
+                    .saturating_sub(1)
+                    .clamp(0, self.get_clamp_upper());
+            }
+            ScrollOperation::Down => {
+                self.scroll_offset = self
+                    .scroll_offset
+                    .saturating_add(1)
+                    .clamp(0, self.get_clamp_upper());
+            }
+            ScrollOperation::Reset => {
+                self.scroll_offset = 0;
+            }
+        }
     }
 
     pub(crate) fn quit(&mut self) {
         self.exit = true;
+    }
+
+    fn get_clamp_upper(&self) -> usize {
+        self.schedules_count
+            .saturating_sub(1 + (self.get_past_schedule_count()))
+    }
+
+    fn get_schedules_count(&self) -> Option<usize> {
+        let counts = [
+            self.schedules.regular.len(),
+            self.schedules.anarchy_open.len(),
+            self.schedules.anarchy_series.len(),
+            self.schedules.x_battle.len(),
+        ];
+
+        counts.iter().max().copied()
+    }
+
+    pub(crate) fn get_past_schedule_count(&self) -> usize {
+        // the logic is too convoluted, may need a rewrite
+        let earliest_schedule = self.schedules.regular.first().or_else(|| {
+            self.schedules.anarchy_open.first().or_else(|| {
+                self.schedules
+                    .anarchy_series
+                    .first()
+                    .or_else(|| self.schedules.x_battle.first())
+            })
+        });
+        match earliest_schedule {
+            Some(schedule) => {
+                let time_delta = Utc::now() - schedule.start_time;
+                time_delta.num_hours().unsigned_abs() as usize / 2
+            }
+            None => 0,
+        }
     }
 }
