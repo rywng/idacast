@@ -14,6 +14,7 @@ pkgs.mkShell {
     rust-analyzer
     rustc
     clippy
+    prettierd
   ];
 
   RUST_SRC_PATH = "${pkgs.rust.packages.stable.rustPlatform.rustLibSrc}";
