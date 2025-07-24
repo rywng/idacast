@@ -12,6 +12,7 @@ mod app;
 #[command(version, about)]
 /// This program displays Splatoon 3's stage data from a terminal user interface.
 /// Operating System's language setting is read to automatically determine the translation to use.
+/// Data is fetched from https://splatoon3.ink/
 struct Args {
     /// Optional language to use when fetching translations. If set, will take precedence over
     /// OS's language setting.

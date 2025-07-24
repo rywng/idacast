@@ -13,6 +13,8 @@ pub mod translation;
 
 impl std::error::Error for DataError {}
 
+static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+
 #[derive(Debug, Clone)]
 enum DataError {
     ObjectNonExistError(String),
@@ -32,7 +34,13 @@ impl Display for DataError {
     }
 }
 async fn fetch_data() -> Result<raw_data::RawData> {
-    let res: String = reqwest::get("https://splatoon3.ink/data/schedules.json")
+    let client = reqwest::Client::builder()
+        .user_agent(APP_USER_AGENT)
+        .build()?;
+
+    let res: String = client
+        .get("https://splatoon3.ink/data/schedules.json")
+        .send()
         .await?
         .text()
         .await?;
@@ -45,7 +53,10 @@ async fn fetch_translation(lang: String) -> Result<translation::FlattenedTransla
     let base_url: Url = Url::parse("https://splatoon3.ink/data/locale/")?;
     let joined_url: Url = base_url.join(&format!("{}.json", lang))?;
 
-    let res: String = reqwest::get(joined_url).await?.text().await?;
+    let client = reqwest::Client::builder()
+        .user_agent(APP_USER_AGENT)
+        .build()?;
+    let res: String = client.get(joined_url).send().await?.text().await?;
 
     // Need to sanitize data, workaround for https://github.com/misenhower/splatoon3.ink/issues/94
     let mut res: Value = serde_json::from_str(&res)?;
