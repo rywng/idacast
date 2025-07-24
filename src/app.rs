@@ -37,7 +37,6 @@ pub(crate) struct App {
 
 #[derive(Debug)]
 pub(crate) enum AppEvent {
-    Tick,
     Refresh(RefreshState),
     ScheduleLoad(Schedules),
 }
@@ -72,14 +71,14 @@ impl App {
         }
     }
 
-    pub fn refresh_schedule(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
+    fn refresh_schedule(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
         // TODO: Error handling
         tokio::spawn(App::handle_refresh(tx, lang));
 
         Ok(())
     }
 
-    pub(crate) async fn handle_refresh(
+    async fn handle_refresh(
         tx: UnboundedSender<AppEvent>,
         lang: Option<String>,
     ) -> Result<()> {
@@ -127,7 +126,7 @@ impl App {
         }
     }
 
-    pub(crate) async fn handle_events(&mut self) -> Result<()> {
+    async fn handle_events(&mut self) -> Result<()> {
         // Re-draw the TUI every second to update the clock
         let sleep_duration_until_next_second = {
             let time_now = Utc::now();
@@ -151,9 +150,8 @@ impl App {
         Ok(())
     }
 
-    pub(crate) fn handle_app_event(&mut self, event: AppEvent) -> Result<()> {
+    fn handle_app_event(&mut self, event: AppEvent) -> Result<()> {
         match event {
-            AppEvent::Tick => todo!(),
             AppEvent::Refresh(refresh_state) => self.refresh_state = refresh_state,
             AppEvent::ScheduleLoad(schedules) => {
                 self.schedules = schedules;
@@ -164,7 +162,7 @@ impl App {
         Ok(())
     }
 
-    pub(crate) fn handle_term_event(&mut self, event: crossterm::event::Event) -> Result<()> {
+    fn handle_term_event(&mut self, event: crossterm::event::Event) -> Result<()> {
         match event {
             Event::Key(key_event) => {
                 self.handle_key_event(key_event)?;
@@ -174,7 +172,7 @@ impl App {
         }
     }
 
-    pub(crate) fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
+    fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match key_event.modifiers {
             event::KeyModifiers::CONTROL => {
                 if let event::KeyCode::Char(char) = key_event.code {
@@ -223,7 +221,7 @@ impl App {
         }
     }
 
-    pub(crate) fn quit(&mut self) {
+    fn quit(&mut self) {
         self.exit = true;
     }
 
