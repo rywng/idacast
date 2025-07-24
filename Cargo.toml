@@ -1,14 +1,19 @@
 [package]
 name = "idacast"
 version = "0.1.0"
+description = "Idacast is a program that displays splatoon3's battle stage data from your terminal."
 edition = "2024"
+readme = "README.md"
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/rywng/idacast/"
+keywords = ["terminal", "game", "splatoon", "splatoon_3"]
+categories = ["command-line-utilities"]
 
 [dependencies]
 chrono = { version = "0.4.41", features = ["serde"] }
 clap = { version = "4.5.40", features = ["derive", "unstable-doc"] }
 color-eyre = "0.6.5"
-crossterm = {version = "0.29.0", features = ["event-stream"]}
+crossterm = { version = "0.29.0", features = ["event-stream"] }
 futures = "0.3.31"
 ratatui = "0.29.0"
 reqwest = { version = "0.12.22", default-features = false, features = [
