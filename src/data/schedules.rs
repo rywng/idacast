@@ -2,7 +2,7 @@ use chrono::{self, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    raw_data,
+    raw_data::{self},
     translation::{Dictionary, Translatable},
 };
 
@@ -12,6 +12,9 @@ pub struct Schedules {
     pub anarchy_open: Vec<Schedule>,
     pub anarchy_series: Vec<Schedule>,
     pub x_battle: Vec<Schedule>,
+    pub work_regular: Vec<CoopSchedule>,
+    pub work_big_run: Vec<CoopSchedule>,
+    pub work_team_contest: Vec<CoopSchedule>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -64,6 +67,23 @@ impl Translatable for NameID {
     }
 }
 
+impl From<&raw_data::CoopNode> for CoopSchedule {
+    fn from(value: &raw_data::CoopNode) -> Self {
+        Self {
+            start_time: value.start_time,
+            end_time: value.end_time,
+            boss: (&value.match_setting.boss).into(),
+            stage: (&value.match_setting.coop_stage).into(),
+            weapons: value
+                .match_setting
+                .weapons
+                .iter()
+                .map(|weapon| weapon.into())
+                .collect(),
+        }
+    }
+}
+
 impl From<&raw_data::MatchNode> for Schedule {
     fn from(value: &raw_data::MatchNode) -> Self {
         Schedule {
@@ -82,12 +102,7 @@ impl From<&raw_data::MatchNode> for Schedule {
 
 impl From<raw_data::RawData> for Schedules {
     fn from(value: raw_data::RawData) -> Self {
-        let mut res = Schedules {
-            regular: vec![],
-            anarchy_open: vec![],
-            anarchy_series: vec![],
-            x_battle: vec![],
-        };
+        let mut res = Self::default();
 
         value
             .data
@@ -131,6 +146,15 @@ impl From<raw_data::RawData> for Schedules {
                 }
             });
 
+        value
+            .data
+            .coop_grouping_schedule
+            .regular_schedules
+            .nodes
+            .iter()
+            .for_each(|schedule| {
+                res.work_regular.push(schedule.into());
+            });
         res
     }
 }
