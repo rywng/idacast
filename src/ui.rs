@@ -28,7 +28,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
 
     render_footer(app, frame, footer_area);
 
-    match app.app_screen {
+    match app.current_screen {
         AppScreen::Battles => render_stages(app, frame, content_area),
         AppScreen::Work => {}
         AppScreen::Challenges => {}
@@ -43,7 +43,7 @@ fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
     let tab_titles = AppScreen::iter().map(AppScreen::to_tab_title);
     let tabs = Tabs::new(tab_titles)
         .highlight_style(Modifier::REVERSED | Modifier::BOLD)
-        .select(app.app_screen as usize)
+        .select(app.current_screen as usize)
         .divider(" ")
         .padding("", "");
 
@@ -63,12 +63,12 @@ fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
 }
 
 fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
-    let scroll_info = if app.scroll_offset == 0 || app.schedules_count == 0 {
+    let scroll_info = if app.battles_scroll_offset == 0 || app.schedules_count == 0 {
         "(j/k to scroll)".to_string()
     } else {
         format!(
             "(^L to reset scroll) lines {}/{}",
-            app.scroll_offset.saturating_add(1),
+            app.battles_scroll_offset.saturating_add(1),
             app.schedules_count
                 .saturating_sub(app.get_past_schedule_count()),
         )
@@ -114,12 +114,12 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
     let filtered_open = filter_schedules(
         &app.schedules.anarchy_open,
         display_count,
-        Some(app.scroll_offset),
+        Some(app.battles_scroll_offset),
     );
     let filtered_series = filter_schedules(
         &app.schedules.anarchy_series,
         display_count,
-        Some(app.scroll_offset),
+        Some(app.battles_scroll_offset),
     );
     let anarchy_open_block = Block::bordered()
         .border_style(Style::new().red())
@@ -153,7 +153,7 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
         filter_schedules(
             &app.schedules.x_battle,
             display_count,
-            Some(app.scroll_offset),
+            Some(app.battles_scroll_offset),
         ),
         x_battle_area,
         x_battle_block,
@@ -163,7 +163,7 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
         filter_schedules(
             &app.schedules.regular,
             display_count,
-            Some(app.scroll_offset),
+            Some(app.battles_scroll_offset),
         ),
         regular_area,
         regular_battle_block,

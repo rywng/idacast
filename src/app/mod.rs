@@ -37,7 +37,7 @@ pub const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
 pub(crate) struct App {
     pub(crate) exit: bool,
     pub(crate) locale: Option<String>,
-    pub(crate) scroll_offset: usize,
+    pub(crate) battles_scroll_offset: usize,
     /// the length of the longest schedules fetched, doesn't take account into past schedules
     pub(crate) schedules_count: usize,
     pub(crate) refresh_state: RefreshState,
@@ -45,10 +45,10 @@ pub(crate) struct App {
     pub(crate) appevents_tx: UnboundedSender<AppEvent>,
     pub(crate) appevents_rx: UnboundedReceiverStream<AppEvent>,
     pub(crate) termevents_rx: EventStream,
-    pub(crate) app_screen: AppScreen,
+    pub(crate) current_screen: AppScreen,
 }
 
-#[derive(Default, EnumIter, FromRepr, Display, Clone, Copy)]
+#[derive(Default, EnumIter, FromRepr, Display, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum AppScreen {
     #[default]
     Battles,
@@ -70,12 +70,12 @@ impl AppScreen {
     }
 
     fn last() -> Self {
-        AppScreen::iter().last().unwrap_or(Self::default())
+        AppScreen::iter().next_back().unwrap_or_default()
     }
 
     fn next(self) -> Self {
         let cur = self as usize;
-        Self::from_repr(cur.wrapping_add(1)).unwrap_or(Self::default())
+        Self::from_repr(cur.wrapping_add(1)).unwrap_or_default()
     }
 
     fn prev(self) -> Self {
@@ -118,13 +118,13 @@ impl App {
             exit: false,
             locale,
             schedules_count: 0,
-            scroll_offset: 0,
+            battles_scroll_offset: 0,
             refresh_state: RefreshState::Pending,
             termevents_rx: EventStream::new(),
             schedules: Schedules::default(),
             appevents_tx: tx,
             appevents_rx: UnboundedReceiverStream::new(rx),
-            app_screen: AppScreen::default(),
+            current_screen: AppScreen::default(),
         }
     }
 
@@ -315,29 +315,40 @@ impl App {
     }
 
     fn next_tab(&mut self) {
-        self.app_screen = self.app_screen.next();
+        self.current_screen = self.current_screen.next();
     }
 
     fn prev_tab(&mut self) {
-        self.app_screen = self.app_screen.prev();
+        self.current_screen = self.current_screen.prev();
     }
 
     fn handle_scroll(&mut self, operation: ScrollOperation) {
+        match self.current_screen {
+            AppScreen::Battles => {
+                self.handle_battle_scrolling(operation);
+            }
+            AppScreen::Work => todo!(),
+            AppScreen::Challenges => todo!(),
+            AppScreen::Fest => todo!(),
+        }
+    }
+
+    fn handle_battle_scrolling(&mut self, operation: ScrollOperation) {
         match operation {
             ScrollOperation::Up => {
-                self.scroll_offset = self
-                    .scroll_offset
+                self.battles_scroll_offset = self
+                    .battles_scroll_offset
                     .saturating_sub(1)
                     .clamp(0, self.get_clamp_upper());
             }
             ScrollOperation::Down => {
-                self.scroll_offset = self
-                    .scroll_offset
+                self.battles_scroll_offset = self
+                    .battles_scroll_offset
                     .saturating_add(1)
                     .clamp(0, self.get_clamp_upper());
             }
             ScrollOperation::Reset => {
-                self.scroll_offset = 0;
+                self.battles_scroll_offset = 0;
             }
         }
     }
