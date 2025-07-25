@@ -5,7 +5,7 @@ use super::{
     raw_data,
     translation::{Dictionary, Translatable},
 };
-#[derive(Debug, Default, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Schedules {
     pub regular: Vec<Schedule>,
     pub anarchy_open: Vec<Schedule>,

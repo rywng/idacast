@@ -1,11 +1,8 @@
-use cached::DiskCache;
-use cached::proc_macro::io_cached;
 use chrono::Local;
 use futures::join;
 use schedules::{Schedule, Schedules};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::time::Duration;
 use std::{cmp::min, fmt::Display};
 use translation::Translatable;
 
@@ -150,23 +147,6 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     }
 }
 
-#[io_cached(
-    disk = true,
-    time = 10800, // 3 hours
-    time_refresh = false,
-    name = "IDACAST_CACHE", // TODO I don't know how to use static variable in macros, so there's
-    // magic string here.
-    convert = r##"{format!("{:?}", lang)}"##,
-    map_error = r##"|e| DataError::DiskError(e.to_string())"##,
-    ty = "DiskCache<String, Schedules>"
-)]
-pub async fn get_schedules_cached(lang: Option<String>) -> Result<schedules::Schedules, DataError> {
-    match get_schedules(lang).await {
-        Ok(schedules) => Ok(schedules),
-        Err(error) => Err(DataError::NetworkError(error.to_string())),
-    }
-}
-
 pub fn filter_schedules(
     schedules: &[Schedule],
     count: usize,
@@ -200,7 +180,7 @@ mod test {
     use chrono::{Duration, Utc};
 
     use crate::data::{
-        fetch_translation, get_schedules_cached, schedules::Schedules,
+        fetch_translation, get_schedules, schedules::Schedules,
         translation::FlattenedTranslationDictionary,
     };
 
@@ -211,7 +191,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_schedules_online() {
-        let _schedules: Schedules = get_schedules_cached(None).await.unwrap();
+        let _schedules: Schedules = get_schedules(None).await.unwrap();
         dbg!(&_schedules);
     }
 
@@ -232,7 +212,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_schedules_online_with_translation() {
-        let _schedules_translated: Schedules = get_schedules_cached(Some("zh-CN".to_owned()))
+        let _schedules_translated: Schedules = get_schedules(Some("zh-CN".to_owned()))
             .await
             .unwrap();
         dbg!(&_schedules_translated);

@@ -1,5 +1,6 @@
 use std::io::stdout;
 
+use app::CACHE_STORE_NAME;
 use cached::DiskCache;
 use clap::Parser;
 use color_eyre::Result;
@@ -39,7 +40,7 @@ impl Args {
 }
 
 fn clear_cache() -> Result<()> {
-    let mut cache_db = DiskCache::<String, Schedules>::new("IDACAST_CACHE").build()?;
+    let mut cache_db = DiskCache::<String, Schedules>::new(CACHE_STORE_NAME).build()?;
     let connection = cache_db.connection_mut();
     connection.clear()?;
     Ok(())

@@ -1,3 +1,6 @@
+use std::sync::LazyLock;
+
+use cached::{DiskCache, IOCached};
 use chrono::{DateTime, Duration, Local, Utc};
 use color_eyre::{Result, eyre::Report};
 use crossterm::event::{self, Event, EventStream, KeyEvent, MouseButton, MouseEvent};
@@ -10,13 +13,24 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use data::schedules::Schedules;
 
-use crate::data::{self, get_schedules, get_schedules_cached};
+use crate::data::{self, get_schedules};
 use crate::ui::draw;
 
-// Update the schedules every 4 hours. There's no reason to change it.
-const AUTO_UPDATE_INTERVAL: Duration = Duration::hours(4);
+// Cache
 
-#[derive(Debug)]
+static CACHE_STORE: LazyLock<DiskCache<String, Schedules>> = LazyLock::new(|| {
+    DiskCache::new(CACHE_STORE_NAME)
+        .set_lifespan(CACHE_STORE_TTL.to_std().unwrap())
+        .set_refresh(false)
+        .build()
+        .unwrap()
+});
+
+// Update the schedules every 4 hours. There's no reason to change it.
+const AUTO_UPDATE_INTERVAL: Duration = Duration::hours(2);
+const CACHE_STORE_TTL: Duration = Duration::hours(4);
+pub const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
+
 pub(crate) struct App {
     pub(crate) exit: bool,
     pub(crate) locale: Option<String>,
@@ -48,6 +62,13 @@ enum ScrollOperation {
     Up,
     Down,
     Reset,
+}
+
+fn format_option_string(locale: &Option<String>) -> String {
+    match locale {
+        Some(locale) => locale.clone(),
+        None => "default".to_string(),
+    }
 }
 
 impl App {
@@ -84,14 +105,18 @@ impl App {
     ) -> Result<()> {
         tx.send(AppEvent::Refresh(RefreshState::Pending))?;
 
-        let res = match cached {
-            true => match get_schedules_cached(lang).await {
-                Ok(schedule) => Ok(schedule),
-                Err(error) => Err(Report::from(error)),
-            },
-            false => get_schedules(lang).await,
+        let cached_opt = App::get_cache(&format_option_string(&lang))?;
+        let fetch_online = async || get_schedules(lang).await;
+
+        let schedules_result: Result<Schedules> = if !cached {
+            Ok(fetch_online().await?)
+        } else if let Some(schedules) = cached_opt {
+            Ok(schedules)
+        } else {
+            Ok(fetch_online().await?)
         };
-        match res {
+
+        match schedules_result {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
                 tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))?;
@@ -101,6 +126,10 @@ impl App {
             }
         }
         Ok(())
+    }
+
+    fn get_cache(lang: &str) -> Result<Option<Schedules>> {
+        Ok(CACHE_STORE.cache_get(&lang.to_string())?)
     }
 
     /// runs the application's main loop until the user quits
@@ -159,8 +188,11 @@ impl App {
         match event {
             AppEvent::Refresh(refresh_state) => self.refresh_state = refresh_state,
             AppEvent::ScheduleLoad(schedules) => {
-                self.schedules = schedules;
-                self.schedules_count = self.get_schedules_count().unwrap_or(0);
+                if self.schedules != schedules {
+                    self.schedules = schedules.clone();
+                    self.schedules_count = self.get_schedules_count().unwrap_or(0);
+                    CACHE_STORE.cache_set(format_option_string(&self.locale), schedules)?;
+                }
             }
         }
 
