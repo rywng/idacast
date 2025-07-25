@@ -154,16 +154,16 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     disk = true,
     time = 10800, // 3 hours
     time_refresh = false,
+    name = "IDACAST_CACHE", // TODO I don't know how to use static variable in macros, so there's
+    // magic string here.
     convert = r##"{format!("{:?}", lang)}"##,
     map_error = r##"|e| DataError::DiskError(e.to_string())"##,
     ty = "DiskCache<String, Schedules>"
 )]
 pub async fn get_schedules_cached(lang: Option<String>) -> Result<schedules::Schedules, DataError> {
-    match get_schedules(lang).await  {
+    match get_schedules(lang).await {
         Ok(schedules) => Ok(schedules),
-        Err(error) => {
-            Err(DataError::NetworkError(error.to_string()))
-        }
+        Err(error) => Err(DataError::NetworkError(error.to_string())),
     }
 }
 
