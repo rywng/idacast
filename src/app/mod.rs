@@ -37,15 +37,42 @@ pub(crate) const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
 pub(crate) struct App {
     exit: bool,
     locale: Option<String>,
-    battles_scroll_offset: usize,
-    /// the length of the longest schedules fetched, doesn't take account into past schedules
-    schedules_count: usize,
+    app_ui: AppUI,
     refresh_state: RefreshState,
     schedules: schedules::Schedules,
     appevents_tx: UnboundedSender<AppEvent>,
     appevents_rx: UnboundedReceiverStream<AppEvent>,
     termevents_rx: EventStream,
+}
+
+#[derive(Default)]
+struct AppUI {
     current_screen: AppScreen,
+    battles: Battles,
+    work: Work,
+    challenges: Challenges,
+    fest: Fest,
+}
+
+#[derive(Default)]
+struct Battles {
+    scroll_offset: usize,
+    schedules_count: usize,
+}
+
+#[derive(Default)]
+struct Work {
+    scroll_offset: usize,
+}
+
+#[derive(Default)]
+struct Challenges {
+    scroll_offset: usize,
+}
+
+#[derive(Default)]
+struct Fest {
+    scroll_offset: usize,
 }
 
 #[derive(Default, EnumIter, FromRepr, Display, Clone, Copy, PartialEq, Eq)]
@@ -117,14 +144,12 @@ impl App {
         App {
             exit: false,
             locale,
-            schedules_count: 0,
-            battles_scroll_offset: 0,
+            app_ui: AppUI::default(),
             refresh_state: RefreshState::Pending,
             termevents_rx: EventStream::new(),
             schedules: Schedules::default(),
             appevents_tx: tx,
             appevents_rx: UnboundedReceiverStream::new(rx),
-            current_screen: AppScreen::default(),
         }
     }
 
@@ -230,7 +255,8 @@ impl App {
             AppEvent::ScheduleLoad(schedules) => {
                 if self.schedules != schedules {
                     self.schedules = schedules.clone();
-                    self.schedules_count = self.get_schedules_count().unwrap_or(0);
+                    self.app_ui.battles.schedules_count =
+                        self.get_battle_schedules_count().unwrap_or(0);
                     CACHE_STORE.cache_set(format_option_string(&self.locale), schedules)?;
                 }
             }
@@ -315,15 +341,15 @@ impl App {
     }
 
     fn next_tab(&mut self) {
-        self.current_screen = self.current_screen.next();
+        self.app_ui.current_screen = self.app_ui.current_screen.next();
     }
 
     fn prev_tab(&mut self) {
-        self.current_screen = self.current_screen.prev();
+        self.app_ui.current_screen = self.app_ui.current_screen.prev();
     }
 
     fn handle_scroll(&mut self, operation: ScrollOperation) {
-        match self.current_screen {
+        match self.app_ui.current_screen {
             AppScreen::Battles => {
                 self.handle_battle_scrolling(operation);
             }
@@ -336,19 +362,23 @@ impl App {
     fn handle_battle_scrolling(&mut self, operation: ScrollOperation) {
         match operation {
             ScrollOperation::Up => {
-                self.battles_scroll_offset = self
-                    .battles_scroll_offset
+                self.app_ui.battles.scroll_offset = self
+                    .app_ui
+                    .battles
+                    .scroll_offset
                     .saturating_sub(1)
-                    .clamp(0, self.get_clamp_upper());
+                    .clamp(0, self.get_battles_clamp_upper());
             }
             ScrollOperation::Down => {
-                self.battles_scroll_offset = self
-                    .battles_scroll_offset
+                self.app_ui.battles.scroll_offset = self
+                    .app_ui
+                    .battles
+                    .scroll_offset
                     .saturating_add(1)
-                    .clamp(0, self.get_clamp_upper());
+                    .clamp(0, self.get_battles_clamp_upper());
             }
             ScrollOperation::Reset => {
-                self.battles_scroll_offset = 0;
+                self.app_ui.battles.scroll_offset = 0;
             }
         }
     }
@@ -357,12 +387,14 @@ impl App {
         self.exit = true;
     }
 
-    fn get_clamp_upper(&self) -> usize {
-        self.schedules_count
+    fn get_battles_clamp_upper(&self) -> usize {
+        self.app_ui
+            .battles
+            .schedules_count
             .saturating_sub(1 + (self.get_past_schedule_count()))
     }
 
-    fn get_schedules_count(&self) -> Option<usize> {
+    fn get_battle_schedules_count(&self) -> Option<usize> {
         let counts = [
             self.schedules.regular.len(),
             self.schedules.anarchy_open.len(),

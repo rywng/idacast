@@ -12,6 +12,8 @@ use ratatui::{
 use strum::IntoEnumIterator;
 use unicode_width::UnicodeWidthStr;
 
+use super::AppUI;
+
 pub fn draw(app: &App, frame: &mut Frame) {
     let [header_area, content_area, footer_area] = Layout::default()
         .direction(Direction::Vertical)
@@ -28,7 +30,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
 
     render_footer(app, frame, footer_area);
 
-    match app.current_screen {
+    match app.app_ui.current_screen {
         AppScreen::Battles => render_stages(app, frame, content_area),
         AppScreen::Work => {}
         AppScreen::Challenges => {}
@@ -43,7 +45,7 @@ fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
     let tab_titles = AppScreen::iter().map(AppScreen::to_tab_title);
     let tabs = Tabs::new(tab_titles)
         .highlight_style(Modifier::REVERSED | Modifier::BOLD)
-        .select(app.current_screen as usize)
+        .select(app.app_ui.current_screen as usize)
         .divider(" ")
         .padding("", "");
 
@@ -62,15 +64,26 @@ fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
     frame.render_widget(time, time_area);
 }
 
+fn get_scroll_offset(cur_screen: &AppScreen, app_ui: &AppUI) -> usize {
+    match cur_screen {
+        AppScreen::Battles => app_ui.battles.scroll_offset,
+        AppScreen::Work => app_ui.work.scroll_offset,
+        AppScreen::Challenges => app_ui.challenges.scroll_offset,
+        AppScreen::Fest => app_ui.fest.scroll_offset,
+    }
+}
+
 fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
-    let scroll_info = if app.battles_scroll_offset == 0 || app.schedules_count == 0 {
+    let scroll_offset = get_scroll_offset(&app.app_ui.current_screen, &app.app_ui);
+    let battle_schedules_count = app.app_ui.battles.schedules_count;
+
+    let scroll_info = if scroll_offset == 0 || battle_schedules_count == 0 {
         "(j/k to scroll)".to_string()
     } else {
         format!(
             "(^L to reset scroll) lines {}/{}",
-            app.battles_scroll_offset.saturating_add(1),
-            app.schedules_count
-                .saturating_sub(app.get_past_schedule_count()),
+            scroll_offset.saturating_add(1),
+            battle_schedules_count.saturating_sub(app.get_past_schedule_count()),
         )
     }
     .italic()
@@ -114,12 +127,12 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
     let filtered_open = filter_schedules(
         &app.schedules.anarchy_open,
         display_count,
-        Some(app.battles_scroll_offset),
+        Some(app.app_ui.battles.scroll_offset),
     );
     let filtered_series = filter_schedules(
         &app.schedules.anarchy_series,
         display_count,
-        Some(app.battles_scroll_offset),
+        Some(app.app_ui.battles.scroll_offset),
     );
     let anarchy_open_block = Block::bordered()
         .border_style(Style::new().red())
@@ -153,7 +166,7 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
         filter_schedules(
             &app.schedules.x_battle,
             display_count,
-            Some(app.battles_scroll_offset),
+            Some(app.app_ui.battles.scroll_offset),
         ),
         x_battle_area,
         x_battle_block,
@@ -163,7 +176,7 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
         filter_schedules(
             &app.schedules.regular,
             display_count,
-            Some(app.battles_scroll_offset),
+            Some(app.app_ui.battles.scroll_offset),
         ),
         regular_area,
         regular_battle_block,
