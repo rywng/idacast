@@ -204,9 +204,8 @@ mod test {
 
     #[tokio::test]
     async fn test_get_schedules_online_with_translation() {
-        let _schedules_translated: Schedules = get_schedules(Some("zh-CN".to_owned()))
-            .await
-            .unwrap();
+        let _schedules_translated: Schedules =
+            get_schedules(Some("zh-CN".to_owned())).await.unwrap();
         dbg!(&_schedules_translated);
     }
 
