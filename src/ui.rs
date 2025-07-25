@@ -7,40 +7,59 @@ use crate::{
 use chrono::{DateTime, Duration, Local, TimeDelta};
 use ratatui::{
     prelude::*,
-    widgets::{Block, Padding, Paragraph, Tabs},
+    widgets::{Block, Paragraph, Tabs},
 };
 use strum::IntoEnumIterator;
 use unicode_width::UnicodeWidthStr;
 
 pub fn draw(app: &App, frame: &mut Frame) {
-    let [header_area, bankara_area, battle_area, footer_area] = Layout::default()
+    let [header_area, content_area, footer_area] = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(1), // Header: Branding and title
-            Constraint::Min(5),    // Bankara information
-            Constraint::Min(5),    // Other Stage information
+            Constraint::Min(10),   // Bankara information
             Constraint::Length(1), // Footer: Additional Information (Updates, information)
         ])
         .spacing(1)
         .flex(layout::Flex::SpaceBetween)
         .areas(frame.area());
 
-    // Header
     render_header(app, frame, header_area);
-    // Footer
+
     render_footer(app, frame, footer_area);
-    // Stages
-    render_stages(app, frame, bankara_area, battle_area);
+
+    match app.app_screen {
+        AppScreen::Battles => render_stages(app, frame, content_area),
+        AppScreen::Work => {}
+        AppScreen::Challenges => {}
+        AppScreen::Fest => {}
+    }
 }
 
-fn render_header(_app: &App, frame: &mut Frame<'_>, header_area: Rect) {
+fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
     let time = Local::now().format("%H:%M:%S").to_string().fg(Color::Gray);
     let title = "IdaCast".bold().fg(Color::Green);
-    let block = Block::new()
-        .title_top(title.into_left_aligned_line())
-        .title_top("Splatoon3".fg(Color::Magenta).into_left_aligned_line())
-        .title_top(time.into_right_aligned_line());
-    frame.render_widget(block, header_area);
+
+    let tab_titles = AppScreen::iter().map(AppScreen::to_tab_title);
+    let tabs = Tabs::new(tab_titles)
+        .highlight_style(Modifier::REVERSED | Modifier::BOLD)
+        .select(app.app_screen as usize)
+        .divider(" ")
+        .padding("", "");
+
+    let [title_area, tabs_area, time_area] = Layout::horizontal([
+        Constraint::Length(title.content.len() as u16),
+        Constraint::Fill(1),
+        Constraint::Length(time.content.len() as u16),
+    ])
+    .direction(Direction::Horizontal)
+    .spacing(1)
+    .flex(layout::Flex::SpaceAround)
+    .areas(header_area);
+
+    frame.render_widget(title, title_area);
+    frame.render_widget(tabs, tabs_area);
+    frame.render_widget(time, time_area);
 }
 
 fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
@@ -70,14 +89,18 @@ fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
         Constraint::Fill(1),
         Constraint::Length(scroll_info.content.len() as u16),
     ])
-        .flex(layout::Flex::SpaceAround).spacing(1)
+    .flex(layout::Flex::SpaceAround)
+    .spacing(1)
     .areas(footer_area);
 
     frame.render_widget(status, status_area);
     frame.render_widget(scroll_info, scroll_info_area);
 }
 
-fn render_stages(app: &App, frame: &mut Frame<'_>, bankara_area: Rect, battle_area: Rect) {
+fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
+    let [bankara_area, battle_area] =
+        Layout::vertical([Constraint::Min(5), Constraint::Min(5)]).areas(stage_area);
+
     let [anarchy_series_area, anarchy_open_area] = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Fill(1), Constraint::Fill(1)])

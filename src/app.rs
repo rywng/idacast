@@ -7,7 +7,10 @@ use crossterm::event::{self, Event, EventStream, KeyEvent, MouseButton, MouseEve
 use data::schedules::{self};
 use futures::{StreamExt, future::FutureExt};
 use ratatui::DefaultTerminal;
+use ratatui::style::{Color, Stylize};
 
+use strum::IntoEnumIterator;
+use strum_macros::{Display, EnumIter, FromRepr};
 use tokio::sync::mpsc::UnboundedSender;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
@@ -42,6 +45,43 @@ pub(crate) struct App {
     pub(crate) appevents_tx: UnboundedSender<AppEvent>,
     pub(crate) appevents_rx: UnboundedReceiverStream<AppEvent>,
     pub(crate) termevents_rx: EventStream,
+    pub(crate) app_screen: AppScreen,
+}
+
+#[derive(Default, EnumIter, FromRepr, Display, Clone, Copy)]
+pub(crate) enum AppScreen {
+    #[default]
+    Battles,
+    Work,
+    Challenges,
+    Fest,
+}
+
+impl AppScreen {
+    pub(crate) fn to_tab_title(value: Self) -> ratatui::text::Line<'static> {
+        let text = value.to_string();
+        let color = match value {
+            AppScreen::Battles => Color::LightGreen,
+            AppScreen::Work => Color::LightRed,
+            AppScreen::Challenges => Color::LightMagenta,
+            AppScreen::Fest => Color::LightBlue,
+        };
+        format!(" {} ", text).fg(color).bg(Color::Black).into()
+    }
+
+    fn last() -> Self {
+        AppScreen::iter().last().unwrap_or(Self::default())
+    }
+
+    fn next(self) -> Self {
+        let cur = self as usize;
+        Self::from_repr(cur.wrapping_add(1)).unwrap_or(Self::default())
+    }
+
+    fn prev(self) -> Self {
+        let cur = self as usize;
+        Self::from_repr(cur.wrapping_sub(1)).unwrap_or(Self::last())
+    }
 }
 
 #[derive(Debug)]
@@ -84,6 +124,7 @@ impl App {
             schedules: Schedules::default(),
             appevents_tx: tx,
             appevents_rx: UnboundedReceiverStream::new(rx),
+            app_screen: AppScreen::default(),
         }
     }
 
@@ -241,6 +282,11 @@ impl App {
                     }
                 }
             }
+            event::KeyModifiers::SHIFT => {
+                if key_event.code == event::KeyCode::BackTab {
+                    self.prev_tab();
+                }
+            }
             event::KeyModifiers::NONE => match key_event.code {
                 event::KeyCode::Char(char) => match char {
                     'q' => self.quit(),
@@ -251,16 +297,29 @@ impl App {
                     )?,
                     'k' => self.handle_scroll(ScrollOperation::Up),
                     'j' => self.handle_scroll(ScrollOperation::Down),
+                    'l' => self.next_tab(),
+                    'h' => self.prev_tab(),
                     _ => {}
                 },
                 event::KeyCode::Esc => {
                     self.quit();
+                }
+                event::KeyCode::Tab => {
+                    self.next_tab();
                 }
                 _ => {}
             },
             _ => {}
         }
         Ok(())
+    }
+
+    fn next_tab(&mut self) {
+        self.app_screen = self.app_screen.next();
+    }
+
+    fn prev_tab(&mut self) {
+        self.app_screen = self.app_screen.prev();
     }
 
     fn handle_scroll(&mut self, operation: ScrollOperation) {
