@@ -32,7 +32,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
 
     match app.app_ui.current_screen {
         AppScreen::Battles => render_stages(app, frame, content_area),
-        AppScreen::Work => {}
+        AppScreen::Work => render_work(app, frame, content_area),
         AppScreen::Challenges => {}
         AppScreen::Fest => {}
     }
@@ -182,6 +182,28 @@ fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
         regular_battle_block,
         frame,
     );
+}
+
+fn center_single_block(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
+    let [area] = Layout::horizontal([horizontal])
+        .flex(layout::Flex::Center)
+        .areas(area);
+    let [area] = Layout::vertical([vertical])
+        .flex(layout::Flex::Center)
+        .areas(area);
+    area
+}
+
+fn render_work(app: &App, frame: &mut Frame, area: Rect) {
+    let centered = center_single_block(
+        area,
+        Constraint::Max((area.width as f64 * 0.8).floor() as u16),
+        Constraint::Max((area.height as f64 * 0.95).floor() as u16),
+    );
+    let block = Block::bordered()
+        .border_style(Color::Red)
+        .title("Grizzco Work");
+    render_schedule_widget(Some(&app.schedules.regular), centered, block, frame);
 }
 
 fn render_schedule_widget(
