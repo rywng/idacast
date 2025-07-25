@@ -25,34 +25,24 @@ pub fn draw(app: &App, frame: &mut Frame) {
         .areas(frame.area());
 
     // Header
-    render_header(frame, header_area);
-
+    render_header(app, frame, header_area);
     // Footer
     render_footer(app, frame, footer_area);
     // Stages
     render_stages(app, frame, bankara_area, battle_area);
 }
 
-fn render_header(frame: &mut Frame<'_>, header_area: Rect) {
-    let time = Local::now()
-        .format("%H:%M:%S%.f")
-        .to_string()
-        .fg(Color::Gray);
+fn render_header(_app: &App, frame: &mut Frame<'_>, header_area: Rect) {
+    let time = Local::now().format("%H:%M:%S").to_string().fg(Color::Gray);
     let title = "IdaCast".bold().fg(Color::Green);
-    let mid_space = fill_mid_spaces(&title.content, &time.content, header_area).into();
-    let header = Line::from(vec![title, mid_space, time]);
-    frame.render_widget(header, header_area);
+    let block = Block::new()
+        .title_top(title.into_left_aligned_line())
+        .title_top("Splatoon3".fg(Color::Magenta).into_left_aligned_line())
+        .title_top(time.into_right_aligned_line());
+    frame.render_widget(block, header_area);
 }
 
 fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
-    let status = match &app.refresh_state {
-        RefreshState::Pending => Span::from("Updating..."),
-        RefreshState::Completed(time) => {
-            Span::from(format!("Last updated: {}", time.format("%H:%M:%S")))
-        }
-        RefreshState::Error(report) => Span::from(format!("Failed to update: {report}")),
-    }
-    .fg(Color::Gray);
     let scroll_info = if app.scroll_offset == 0 || app.schedules_count == 0 {
         "(j/k to scroll)".to_string()
     } else {
@@ -65,9 +55,18 @@ fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
     }
     .italic()
     .fg(Color::Gray);
-    let mid_space = fill_mid_spaces(&status.content, &scroll_info.content, footer_area);
-    let footer_text = Line::from(vec![status, mid_space.into(), scroll_info]);
-    frame.render_widget(footer_text, footer_area);
+    let status = match &app.refresh_state {
+        RefreshState::Pending => Span::from("Updating..."),
+        RefreshState::Completed(time) => {
+            Span::from(format!("Last updated: {}", time.format("%H:%M:%S")))
+        }
+        RefreshState::Error(report) => Span::from(format!("Failed to update: {report}")),
+    }
+    .fg(Color::Gray);
+    let block = Block::new()
+        .title_top(scroll_info.into_right_aligned_line())
+        .title_top(status.into_left_aligned_line());
+    frame.render_widget(block, footer_area);
 }
 
 fn render_stages(app: &App, frame: &mut Frame<'_>, bankara_area: Rect, battle_area: Rect) {
