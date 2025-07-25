@@ -20,8 +20,6 @@ static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_P
 pub enum DataError {
     ObjectNonExist(String),
     TranslationError(String),
-    DiskError(String),
-    NetworkError(String),
 }
 
 impl Display for DataError {
@@ -32,12 +30,6 @@ impl Display for DataError {
             }
             DataError::ObjectNonExist(object) => {
                 write!(f, "Object {} should exist in the data", object)
-            }
-            DataError::DiskError(cache) => {
-                write!(f, "Failed to load cache: {cache}")
-            }
-            DataError::NetworkError(network_problem) => {
-                write!(f, "{network_problem}")
             }
         }
     }
