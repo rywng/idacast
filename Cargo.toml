@@ -1,6 +1,6 @@
 [package]
 name = "idacast"
-version = "0.1.1"
+version = "0.1.2"
 description = "Idacast is a program that displays splatoon3's battle stage data from your terminal."
 edition = "2024"
 readme = "README.md"
