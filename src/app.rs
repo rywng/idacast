@@ -92,7 +92,6 @@ impl App {
         lang: Option<String>,
         cached: bool,
     ) -> Result<()> {
-        // TODO: Error handling
         tokio::spawn(App::handle_refresh(tx, lang, cached));
 
         Ok(())
