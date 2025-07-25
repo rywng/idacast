@@ -127,8 +127,8 @@ impl App {
         Ok(())
     }
 
-    fn get_cache(lang: &str) -> Result<Option<Schedules>> {
-        Ok(CACHE_STORE.cache_get(&lang.to_string())?)
+    fn get_cache(lang: &String) -> Result<Option<Schedules>> {
+        Ok(CACHE_STORE.cache_get(lang)?)
     }
 
     /// runs the application's main loop until the user quits
