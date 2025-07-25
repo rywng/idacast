@@ -1,14 +1,15 @@
 use std::cmp::max;
 
 use crate::{
-    app::{App, RefreshState},
+    app::{App, AppScreen, RefreshState},
     data::{filter_schedules, schedules::Schedule},
 };
 use chrono::{DateTime, Duration, Local, TimeDelta};
 use ratatui::{
     prelude::*,
-    widgets::{Block, Paragraph},
+    widgets::{Block, Padding, Paragraph, Tabs},
 };
+use strum::IntoEnumIterator;
 use unicode_width::UnicodeWidthStr;
 
 pub fn draw(app: &App, frame: &mut Frame) {
@@ -63,10 +64,17 @@ fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
         RefreshState::Error(report) => Span::from(format!("Failed to update: {report}")),
     }
     .fg(Color::Gray);
-    let block = Block::new()
-        .title_top(scroll_info.into_right_aligned_line())
-        .title_top(status.into_left_aligned_line());
-    frame.render_widget(block, footer_area);
+
+    let [status_area, _spacer, scroll_info_area] = Layout::horizontal([
+        Constraint::Length(status.content.len() as u16),
+        Constraint::Fill(1),
+        Constraint::Length(scroll_info.content.len() as u16),
+    ])
+        .flex(layout::Flex::SpaceAround).spacing(1)
+    .areas(footer_area);
+
+    frame.render_widget(status, status_area);
+    frame.render_widget(scroll_info, scroll_info_area);
 }
 
 fn render_stages(app: &App, frame: &mut Frame<'_>, bankara_area: Rect, battle_area: Rect) {
