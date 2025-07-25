@@ -1,12 +1,14 @@
 use std::io::stdout;
 
+use cached::DiskCache;
 use clap::Parser;
 use color_eyre::Result;
-use crossterm::{event, ExecutableCommand};
+use crossterm::{ExecutableCommand, event};
+use data::schedules::Schedules;
 
-mod ui;
-mod data;
 mod app;
+mod data;
+mod ui;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -21,7 +23,10 @@ struct Args {
     /// Mouse capture is enabled by default, so that you can use mouse buttons to manipluate the
     /// display. Supply this option to disable it.
     #[arg(long)]
-    no_mouse: Option<bool>,
+    no_mouse: bool,
+    /// Tries to clear the network cache
+    #[arg(long)]
+    clear_cache: bool,
 }
 
 impl Args {
@@ -33,6 +38,13 @@ impl Args {
     }
 }
 
+fn clear_cache() -> Result<()> {
+    let mut cache_db = DiskCache::<String, Schedules>::new("IDACAST_CACHE").build()?;
+    let connection = cache_db.connection_mut();
+    connection.clear()?;
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     color_eyre::install()?;
@@ -41,8 +53,12 @@ async fn main() -> Result<()> {
     let mut args = Args::parse();
     args.infer_language();
 
+    if args.clear_cache {
+        return clear_cache();
+    }
+
     let mut terminal = ratatui::init();
-    if !args.no_mouse.unwrap_or(false) {
+    if !args.no_mouse {
         stdout().execute(event::EnableMouseCapture)?;
     }
 
