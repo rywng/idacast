@@ -25,8 +25,39 @@ pub(super) struct Data {
     pub x_schedules: ScheduleContainer<MatchNode>,
     // event_schedules: MatchSchedules,
     // fest_schedules: MatchSchedules,
-    // coop_grouping_schedule: MatchSchedules,
+    pub coop_grouping_schedule: CoopGroupingSchedule,
     // current_fest: MatchSchedules,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct CoopGroupingSchedule {
+    pub regular_schedules: ScheduleContainer<CoopNode>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub(super) struct CoopNode {
+    #[serde(alias = "startTime")]
+    pub start_time: chrono::DateTime<Utc>,
+    #[serde(alias = "endTime")]
+    pub end_time: chrono::DateTime<Utc>,
+    #[serde(alias = "setting")]
+    pub match_setting: CoopSetting,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct CoopSetting {
+    pub boss: NameID,
+    pub coop_stage: NameID,
+    pub weapons: Vec<NameID>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+pub(super) struct NameID {
+    pub name: String,
+    #[serde(alias = "__splatoon3ink_id")]
+    pub id: String,
 }
 
 #[derive(Deserialize)]
@@ -108,7 +139,7 @@ mod test {
         BankaraMatchSetting, BankaraMode, MatchNodeBankara, MatchVsRule, RawData,
     };
 
-    use super::{MatchNode, MatchSetting, MatchVsStage};
+    use super::{CoopNode, CoopSetting, MatchNode, MatchSetting, MatchVsStage, NameID};
 
     #[test]
     fn test_deserialize_regular_match() {
@@ -275,5 +306,47 @@ mod test {
             .await
             .unwrap();
         let _parsed: RawData = serde_json::from_str(&res_text).unwrap();
+    }
+
+    #[test]
+    fn test_deserialize_coop_regular() {
+        let example_schedule = r#"{"startTime":"2025-07-31T00:00:00Z","endTime":"2025-08-01T16:00:00Z","setting":{"__typename":"CoopNormalSetting","boss":{"name":"Cohozuna","id":"Q29vcEVuZW15LTIz"},"coopStage":{"name":"Marooner's Bay","thumbnailImage":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/1a29476c1ab5fdbc813e2df99cd290ce56dfe29755b97f671a7250e5f77f4961_1.png"},"image":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/high_resolution/1a29476c1ab5fdbc813e2df99cd290ce56dfe29755b97f671a7250e5f77f4961_0.png"},"id":"Q29vcFN0YWdlLTY="},"__isCoopSetting":"CoopNormalSetting","weapons":[{"__splatoon3ink_id":"09284d9bd3b61ea1","name":"Dread Wringer","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/1cf241ee28b282db23d25f1cce3d586151b9b67f4ba20cf5e2e74c82e988c352_0.png"}},{"__splatoon3ink_id":"79e6297eb501599f","name":"Dapple Dualies","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/f1c8fc32bd90fc9258dc17e9f9bcfd5e6498f6e283709bf1896b78193b8e39e9_0.png"}},{"__splatoon3ink_id":"dde2f92988536cd2","name":"Blaster","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/29ccca01285a04f42dc15911f3cd1ee940f9ca0e94c75ba07378828afb3165c0_0.png"}},{"__splatoon3ink_id":"c100f88e8b925e1c","name":"Hydra Splatling","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/34fe0401b6f6a0b09839696fc820ece9570a9d56e3a746b65f0604dec91a9920_0.png"}}]},"__splatoon3ink_king_salmonid_guess":"Cohozuna"}
+        "#;
+
+        let expected: CoopNode = CoopNode {
+            start_time: Utc.with_ymd_and_hms(2025, 7, 31, 0, 0, 0).unwrap(),
+            end_time: Utc.with_ymd_and_hms(2025, 8, 1, 16, 0, 0).unwrap(),
+            match_setting: CoopSetting {
+                boss: NameID {
+                    name: "Cohozuna".to_string(),
+                    id: "Q29vcEVuZW15LTIz".to_string(),
+                },
+                coop_stage: NameID {
+                    name: "Marooner's Bay".to_string(),
+                    id: "Q29vcFN0YWdlLTY=".to_string(),
+                },
+                weapons: vec![
+                    NameID {
+                        name: "Dread Wringer".to_string(),
+                        id: "09284d9bd3b61ea1".to_string(),
+                    },
+                    NameID {
+                        name: "Dapple Dualies".to_string(),
+                        id: "79e6297eb501599f".to_string(),
+                    },
+                    NameID {
+                        name: "Blaster".to_string(),
+                        id: "dde2f92988536cd2".to_string(),
+                    },
+                    NameID {
+                        name: "Hydra Splatling".to_string(),
+                        id: "c100f88e8b925e1c".to_string(),
+                    },
+                ],
+            },
+        };
+
+        let parsed: CoopNode = serde_json::from_str(&example_schedule).unwrap();
+        assert_eq!(parsed, expected);
     }
 }
