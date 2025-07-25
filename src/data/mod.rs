@@ -1,4 +1,3 @@
-use std::time::Duration;
 use cached::DiskCache;
 use cached::proc_macro::io_cached;
 use chrono::Local;
@@ -6,6 +5,7 @@ use futures::join;
 use schedules::{Schedule, Schedules};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::time::Duration;
 use std::{cmp::min, fmt::Display};
 use translation::Translatable;
 
@@ -31,17 +31,17 @@ impl Display for DataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DataError::TranslationError(id) => {
-                        write!(f, "Failed to find translation to the word with id {}", id)
-                    }
+                write!(f, "Failed to find translation to the word with id {}", id)
+            }
             DataError::ObjectNonExist(object) => {
-                        write!(f, "Object {} should exist in the data", object)
-                    }
+                write!(f, "Object {} should exist in the data", object)
+            }
             DataError::DiskError(cache) => {
-                        write!(f, "Failed to load cache: {cache}")
-                    }
+                write!(f, "Failed to load cache: {cache}")
+            }
             DataError::NetworkError(network_problem) => {
                 write!(f, "{network_problem}")
-            },
+            }
         }
     }
 }
@@ -75,9 +75,7 @@ async fn fetch_translation(lang: String) -> Result<translation::FlattenedTransla
     let rules = match res.get_mut("rules") {
         Some(rules) => rules,
         None => {
-            return Err(Report::new(DataError::ObjectNonExist(
-                "rules".to_string(),
-            )));
+            return Err(Report::new(DataError::ObjectNonExist("rules".to_string())));
         }
     };
     match rules.as_object_mut() {
@@ -85,9 +83,7 @@ async fn fetch_translation(lang: String) -> Result<translation::FlattenedTransla
             rule_obj.remove("undefined");
         }
         None => {
-            return Err(Report::new(DataError::ObjectNonExist(
-                "rules".to_string(),
-            )));
+            return Err(Report::new(DataError::ObjectNonExist("rules".to_string())));
         }
     }
 
