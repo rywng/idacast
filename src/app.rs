@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Duration, Local, Utc};
 use color_eyre::{Result, eyre::Report};
 use crossterm::event::{self, Event, EventStream, KeyEvent, MouseButton, MouseEvent};
 use data::schedules::{self};
@@ -14,7 +14,7 @@ use crate::data::{self, get_schedules};
 use crate::ui::draw;
 
 // Update the schedules every 4 hours. There's no reason to change it.
-const AUTO_UPDATE_HOURS: u8 = 4;
+const AUTO_UPDATE_INTERVAL: Duration = Duration::hours(4);
 
 #[derive(Debug)]
 pub(crate) struct App {
@@ -108,9 +108,7 @@ impl App {
         tx: UnboundedSender<AppEvent>,
         locale: Option<String>,
     ) -> Result<()> {
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(
-            60 * 60 * AUTO_UPDATE_HOURS as u64,
-        ));
+        let mut interval = tokio::time::interval(AUTO_UPDATE_INTERVAL.to_std()?);
 
         loop {
             interval.tick().await;
