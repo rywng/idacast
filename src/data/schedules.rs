@@ -18,54 +18,48 @@ pub struct Schedules {
 pub struct Schedule {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
-    pub stages: Vec<Stage>,
-    pub rule: Rule,
+    pub stages: Vec<NameID>,
+    pub rule: NameID,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct Stage {
+pub struct CoopSchedule {
+    pub start_time: DateTime<Utc>,
+    pub end_time: DateTime<Utc>,
+    pub boss: NameID,
+    pub stage: NameID,
+    pub weapons: Vec<NameID>,
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct NameID {
     pub name: String,
     pub id: String,
 }
 
-impl Translatable for Stage {
-    fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
-        Stage {
-            name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
-            id: self.id.clone(),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct Rule {
-    pub name: String,
-    pub id: String,
-}
-
-impl Translatable for Rule {
-    fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
-        Rule {
-            name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
-            id: self.id.clone(),
-        }
-    }
-}
-
-impl From<&raw_data::MatchVsStage> for Stage {
-    fn from(value: &raw_data::MatchVsStage) -> Self {
-        Stage {
+impl From<&super::raw_data::NameID> for NameID {
+    fn from(value: &super::raw_data::NameID) -> Self {
+        Self {
             name: value.name.clone(),
             id: value.id.clone(),
         }
     }
 }
 
-impl From<&raw_data::MatchVsRule> for Rule {
-    fn from(value: &raw_data::MatchVsRule) -> Self {
-        Rule {
-            name: value.name.clone(),
-            id: value.id.clone(),
+impl From<super::raw_data::NameID> for NameID {
+    fn from(value: super::raw_data::NameID) -> Self {
+        Self {
+            name: value.name,
+            id: value.id,
+        }
+    }
+}
+
+impl Translatable for NameID {
+    fn translate(&self, dict: &super::translation::FlattenedTranslationDictionary) -> Self {
+        NameID {
+            name: dict.lookup(&self.id).unwrap_or(self.name.clone()),
+            id: self.id.clone(),
         }
     }
 }

@@ -97,8 +97,8 @@ pub(super) struct MatchNodeBankara {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct MatchSetting {
-    pub vs_stages: Vec<MatchVsStage>,
-    pub vs_rule: MatchVsRule,
+    pub vs_stages: Vec<NameID>,
+    pub vs_rule: NameID,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -116,30 +116,13 @@ pub(super) struct BankaraMatchSetting {
     pub bankara_mode: BankaraMode,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub(super) struct MatchVsStage {
-    vs_stage_id: u16,
-    pub name: String,
-    pub id: String,
-}
-
-#[derive(Deserialize, Debug, PartialEq, Eq)]
-pub(super) struct MatchVsRule {
-    pub name: String,
-    rule: String,
-    pub id: String,
-}
-
 #[cfg(test)]
 mod test {
     use chrono::{TimeZone, Utc};
 
-    use crate::data::raw_data::{
-        BankaraMatchSetting, BankaraMode, MatchNodeBankara, MatchVsRule, RawData,
-    };
+    use crate::data::raw_data::{BankaraMatchSetting, BankaraMode, MatchNodeBankara, RawData};
 
-    use super::{CoopNode, CoopSetting, MatchNode, MatchSetting, MatchVsStage, NameID};
+    use super::{CoopNode, CoopSetting, MatchNode, MatchSetting, NameID};
 
     #[test]
     fn test_deserialize_regular_match() {
@@ -151,20 +134,17 @@ mod test {
             end_time: Utc.with_ymd_and_hms(2025, 7, 8, 8, 0, 0).unwrap(),
             match_setting: MatchSetting {
                 vs_stages: vec![
-                    MatchVsStage {
-                        vs_stage_id: 11,
+                    NameID {
                         name: "Museum d'Alfonsino".to_string(),
                         id: "VnNTdGFnZS0xMQ==".to_string(),
                     },
-                    MatchVsStage {
-                        vs_stage_id: 21,
+                    NameID {
                         name: "Robo ROM-en".to_string(),
                         id: "VnNTdGFnZS0yMQ==".to_string(),
                     },
                 ],
-                vs_rule: MatchVsRule {
+                vs_rule: NameID {
                     name: "Turf War".to_string(),
-                    rule: "TURF_WAR".to_string(),
                     id: "VnNSdWxlLTA=".to_string(),
                 },
             },
@@ -186,20 +166,17 @@ mod test {
                 BankaraMatchSetting {
                     match_setting: MatchSetting {
                         vs_stages: vec![
-                            MatchVsStage {
-                                vs_stage_id: 3,
+                            NameID {
                                 name: "Hagglefish Market".to_string(),
                                 id: "VnNTdGFnZS0z".to_string(),
                             },
-                            MatchVsStage {
-                                vs_stage_id: 14,
+                            NameID {
                                 name: "Sturgeon Shipyard".to_string(),
                                 id: "VnNTdGFnZS0xNA==".to_string(),
                             },
                         ],
-                        vs_rule: MatchVsRule {
+                        vs_rule: NameID {
                             name: "Rainmaker".to_string(),
-                            rule: "GOAL".to_string(),
                             id: "VnNSdWxlLTM=".to_string(),
                         },
                     },
@@ -208,20 +185,17 @@ mod test {
                 BankaraMatchSetting {
                     match_setting: MatchSetting {
                         vs_stages: vec![
-                            MatchVsStage {
-                                vs_stage_id: 12,
+                            NameID {
                                 name: "Mahi-Mahi Resort".to_string(),
                                 id: "VnNTdGFnZS0xMg==".to_string(),
                             },
-                            MatchVsStage {
-                                vs_stage_id: 24,
+                            NameID {
                                 name: "Lemuria Hub".to_string(),
                                 id: "VnNTdGFnZS0yNA==".to_string(),
                             },
                         ],
-                        vs_rule: MatchVsRule {
+                        vs_rule: NameID {
                             name: "Tower Control".to_string(),
-                            rule: "LOFT".to_string(),
                             id: "VnNSdWxlLTI=".to_string(),
                         },
                     },
@@ -275,20 +249,17 @@ mod test {
             end_time: Utc.with_ymd_and_hms(2025, 7, 8, 8, 0, 0).unwrap(),
             match_setting: MatchSetting {
                 vs_stages: vec![
-                    MatchVsStage {
-                        vs_stage_id: 8,
+                    NameID {
                         name: "Barnacle & Dime".to_string(),
                         id: "VnNTdGFnZS04".to_string(),
                     },
-                    MatchVsStage {
-                        vs_stage_id: 19,
+                    NameID {
                         name: "Crableg Capital".to_string(),
                         id: "VnNTdGFnZS0xOQ==".to_string(),
                     },
                 ],
-                vs_rule: MatchVsRule {
+                vs_rule: NameID {
                     name: "Splat Zones".to_string(),
-                    rule: "AREA".to_string(),
                     id: "VnNSdWxlLTE=".to_string(),
                 },
             },

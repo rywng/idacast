@@ -176,10 +176,7 @@ mod test {
         translation::FlattenedTranslationDictionary,
     };
 
-    use super::{
-        filter_schedules,
-        schedules::{Rule, Schedule, Stage},
-    };
+    use super::{filter_schedules, schedules::{NameID, Schedule}};
 
     #[tokio::test]
     async fn test_get_schedules_online() {
@@ -218,10 +215,10 @@ mod test {
         }
     }
 
-    fn get_test_stages(start: isize) -> Vec<Stage> {
+    fn get_test_stages(start: isize) -> Vec<NameID> {
         let mut sample_stages = Vec::new();
         for i in start..start + 2 {
-            sample_stages.push(Stage {
+            sample_stages.push(NameID {
                 name: format!("test stage {i}"),
                 id: format!("test_{i}"),
             });
@@ -229,8 +226,8 @@ mod test {
         sample_stages
     }
 
-    fn get_test_rule() -> Rule {
-        Rule {
+    fn get_test_rule() -> NameID {
+        NameID {
             name: "test rule".to_string(),
             id: "test_rule".to_string(),
         }
