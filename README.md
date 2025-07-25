@@ -1,5 +1,3 @@
-# IdaCast
-
 ```
     ____     __        ______              __
    /  _/____/ /____ _ / ____/____ _ _____ / /_
@@ -9,6 +7,8 @@
 ```
 
 Simple program to view splatoon3's battle stages from your terminal. It supports different languages [^locales].
+
+> This program is under active development, and API is subject to change.
 
 ## Usage
 
@@ -30,8 +30,7 @@ idacast --help
 - `q`: Quit
 - `j` / `k` / `Mouse Wheel`: Scroll
 - `CTRL-L` / `RMB`: Reset scroll
-
-[![asciicast](https://asciinema.org/a/eUcpsXutWhy30un36Vh0EvHEV.svg)](https://asciinema.org/a/eUcpsXutWhy30un36Vh0EvHEV)
+- `TAB` / `S-TAB` / `h` / `l`: Change views
 
 ## TODO
 
