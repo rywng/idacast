@@ -18,13 +18,11 @@ Install with cargo:
 cargo install idacast
 ```
 
-To see the arguments available:
+To see the usage:
 
 ```bash
 idacast --help
 ```
-
-The software will fetch data from `splatoon3.ink` automatically every 4 hours.
 
 ### Keybinds
 
@@ -38,6 +36,7 @@ The software will fetch data from `splatoon3.ink` automatically every 4 hours.
 ## TODO
 
 - Add `lib.rs` export for code reuse
+- Gate caching behind feature flags
 
 ## Development
 
@@ -57,6 +56,6 @@ Data is sourced from [splatoon3.ink](https://splatoon3.ink).
 - Credit: This software currently uses the following endpoints:
   - Schedule data: <https://splatoon3.ink/data/schedules.json>
   - Translation data: <https://splatoon3.ink/data/locale/en-US.json>, depending on user's language preference.
-- Caching: Caching is implemented with a TTL of 3 hours, stored on disk. Data is fetch every 4 hours and user can also manually fetch data by pressing `r`.
-- User Agent: useragent is set to `idacast/<version>`.
+- Caching: Caching is implemented, and the program by default fetch data every 4 hours.
+- User Agent: `user_agent` is set to `idacast/<version>`.
 - Free of Charge: This software is licensed under `MIT OR Apache-2.0`.
