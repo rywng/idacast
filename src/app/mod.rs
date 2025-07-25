@@ -1,3 +1,4 @@
+mod ui;
 use std::sync::LazyLock;
 
 use cached::{DiskCache, IOCached};
@@ -17,10 +18,9 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use data::schedules::Schedules;
 
 use crate::data::{self, get_schedules};
-use crate::ui::draw;
+use ui::draw;
 
 // Cache
-
 static CACHE_STORE: LazyLock<DiskCache<String, Schedules>> = LazyLock::new(|| {
     DiskCache::new(CACHE_STORE_NAME)
         .set_lifespan(CACHE_STORE_TTL.to_std().unwrap())
@@ -35,17 +35,17 @@ const CACHE_STORE_TTL: Duration = Duration::hours(4);
 pub const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
 
 pub(crate) struct App {
-    pub(crate) exit: bool,
-    pub(crate) locale: Option<String>,
-    pub(crate) battles_scroll_offset: usize,
+    exit: bool,
+    locale: Option<String>,
+    battles_scroll_offset: usize,
     /// the length of the longest schedules fetched, doesn't take account into past schedules
-    pub(crate) schedules_count: usize,
-    pub(crate) refresh_state: RefreshState,
-    pub(crate) schedules: schedules::Schedules,
-    pub(crate) appevents_tx: UnboundedSender<AppEvent>,
-    pub(crate) appevents_rx: UnboundedReceiverStream<AppEvent>,
-    pub(crate) termevents_rx: EventStream,
-    pub(crate) current_screen: AppScreen,
+    schedules_count: usize,
+    refresh_state: RefreshState,
+    schedules: schedules::Schedules,
+    appevents_tx: UnboundedSender<AppEvent>,
+    appevents_rx: UnboundedReceiverStream<AppEvent>,
+    termevents_rx: EventStream,
+    current_screen: AppScreen,
 }
 
 #[derive(Default, EnumIter, FromRepr, Display, Clone, Copy, PartialEq, Eq)]
@@ -58,7 +58,7 @@ pub(crate) enum AppScreen {
 }
 
 impl AppScreen {
-    pub(crate) fn to_tab_title(value: Self) -> ratatui::text::Line<'static> {
+    fn to_tab_title(value: Self) -> ratatui::text::Line<'static> {
         let text = value.to_string();
         let color = match value {
             AppScreen::Battles => Color::LightGreen,
@@ -85,13 +85,13 @@ impl AppScreen {
 }
 
 #[derive(Debug)]
-pub(crate) enum AppEvent {
+enum AppEvent {
     Refresh(RefreshState),
     ScheduleLoad(Schedules),
 }
 
 #[derive(Debug, Default)]
-pub(crate) enum RefreshState {
+enum RefreshState {
     #[default]
     Pending,
     Completed(DateTime<Local>),
@@ -373,7 +373,7 @@ impl App {
         counts.iter().max().copied()
     }
 
-    pub(crate) fn get_past_schedule_count(&self) -> usize {
+    fn get_past_schedule_count(&self) -> usize {
         // the logic is too convoluted, may need a rewrite
         let earliest_schedule = self.schedules.regular.first().or_else(|| {
             self.schedules.anarchy_open.first().or_else(|| {

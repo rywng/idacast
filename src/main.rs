@@ -9,7 +9,6 @@ use data::schedules::Schedules;
 
 mod app;
 mod data;
-mod ui;
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
