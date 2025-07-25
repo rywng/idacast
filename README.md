@@ -8,7 +8,7 @@
 /___/ \__,_/ \__,_/ \____/ \__,_//____/ \__/
 ```
 
-Simple program to view splatoon3's battle stages from your terminal.
+Simple program to view splatoon3's battle stages from your terminal. It supports different languages [^locales].
 
 ## Usage
 
@@ -59,3 +59,5 @@ Data is sourced from [splatoon3.ink](https://splatoon3.ink).
 - Caching: Caching is implemented, and the program by default fetch data every 4 hours.
 - User Agent: `user_agent` is set to `idacast/<version>`.
 - Free of Charge: This software is licensed under `MIT OR Apache-2.0`.
+
+[^locales]: <https://github.com/misenhower/splatoon3.ink/wiki/Data-Access#locales>
