@@ -10,7 +10,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use data::schedules::Schedules;
 
-use crate::data::{self, get_schedules};
+use crate::data::{self, get_schedules, get_schedules_cached};
 use crate::ui::draw;
 
 // Update the schedules every 4 hours. There's no reason to change it.
@@ -66,17 +66,32 @@ impl App {
         }
     }
 
-    fn refresh_schedule(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
+    fn refresh_schedule(
+        tx: UnboundedSender<AppEvent>,
+        lang: Option<String>,
+        cached: bool,
+    ) -> Result<()> {
         // TODO: Error handling
-        tokio::spawn(App::handle_refresh(tx, lang));
+        tokio::spawn(App::handle_refresh(tx, lang, cached));
 
         Ok(())
     }
 
-    async fn handle_refresh(tx: UnboundedSender<AppEvent>, lang: Option<String>) -> Result<()> {
+    async fn handle_refresh(
+        tx: UnboundedSender<AppEvent>,
+        lang: Option<String>,
+        cached: bool,
+    ) -> Result<()> {
         tx.send(AppEvent::Refresh(RefreshState::Pending))?;
 
-        match get_schedules(lang).await {
+        let res = match cached {
+            true => match get_schedules_cached(lang).await {
+                Ok(schedule) => Ok(schedule),
+                Err(error) => Err(Report::from(error)),
+            },
+            false => get_schedules(lang).await,
+        };
+        match res {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
                 tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))?;
@@ -112,7 +127,7 @@ impl App {
 
         loop {
             interval.tick().await;
-            App::refresh_schedule(tx.clone(), locale.clone())?;
+            App::refresh_schedule(tx.clone(), locale.clone(), true)?;
         }
     }
 
@@ -198,7 +213,11 @@ impl App {
             event::KeyModifiers::NONE => match key_event.code {
                 event::KeyCode::Char(char) => match char {
                     'q' => self.quit(),
-                    'r' => App::refresh_schedule(self.appevents_tx.clone(), self.locale.clone())?,
+                    'r' => App::refresh_schedule(
+                        self.appevents_tx.clone(),
+                        self.locale.clone(),
+                        false,
+                    )?,
                     'k' => self.handle_scroll(ScrollOperation::Up),
                     'j' => self.handle_scroll(ScrollOperation::Down),
                     _ => {}

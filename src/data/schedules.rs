@@ -1,10 +1,11 @@
 use chrono::{self, DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 use super::{
     raw_data,
     translation::{Dictionary, Translatable},
 };
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize, Clone)]
 pub struct Schedules {
     pub regular: Vec<Schedule>,
     pub anarchy_open: Vec<Schedule>,
@@ -12,7 +13,7 @@ pub struct Schedules {
     pub x_battle: Vec<Schedule>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Schedule {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
@@ -20,7 +21,7 @@ pub struct Schedule {
     pub rule: Rule,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Stage {
     pub name: String,
     pub id: String,
@@ -35,7 +36,7 @@ impl Translatable for Stage {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct Rule {
     pub name: String,
     pub id: String,

@@ -1,11 +1,15 @@
+use std::time::Duration;
+use cached::DiskCache;
+use cached::proc_macro::io_cached;
 use chrono::Local;
 use futures::join;
 use schedules::{Schedule, Schedules};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{cmp::min, fmt::Display};
 use translation::Translatable;
 
-use color_eyre::{Report, Result, eyre::Ok};
+use color_eyre::{Report, Result};
 use reqwest::Url;
 pub mod raw_data;
 pub mod schedules;
@@ -15,21 +19,29 @@ impl std::error::Error for DataError {}
 
 static APP_USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-#[derive(Debug, Clone)]
-enum DataError {
-    ObjectNonExistError(String),
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DataError {
+    ObjectNonExist(String),
     TranslationError(String),
+    DiskError(String),
+    NetworkError(String),
 }
 
 impl Display for DataError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DataError::TranslationError(id) => {
-                write!(f, "Failed to find translation to the word with id {}", id)
-            }
-            DataError::ObjectNonExistError(object) => {
-                write!(f, "Object {} should exist in the data", object)
-            }
+                        write!(f, "Failed to find translation to the word with id {}", id)
+                    }
+            DataError::ObjectNonExist(object) => {
+                        write!(f, "Object {} should exist in the data", object)
+                    }
+            DataError::DiskError(cache) => {
+                        write!(f, "Failed to load cache: {cache}")
+                    }
+            DataError::NetworkError(network_problem) => {
+                write!(f, "{network_problem}")
+            },
         }
     }
 }
@@ -63,7 +75,7 @@ async fn fetch_translation(lang: String) -> Result<translation::FlattenedTransla
     let rules = match res.get_mut("rules") {
         Some(rules) => rules,
         None => {
-            return Err(Report::new(DataError::ObjectNonExistError(
+            return Err(Report::new(DataError::ObjectNonExist(
                 "rules".to_string(),
             )));
         }
@@ -73,7 +85,7 @@ async fn fetch_translation(lang: String) -> Result<translation::FlattenedTransla
             rule_obj.remove("undefined");
         }
         None => {
-            return Err(Report::new(DataError::ObjectNonExistError(
+            return Err(Report::new(DataError::ObjectNonExist(
                 "rules".to_string(),
             )));
         }
@@ -142,6 +154,23 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     }
 }
 
+#[io_cached(
+    disk = true,
+    time = 10800, // 3 hours
+    time_refresh = false,
+    convert = r##"{format!("{:?}", lang)}"##,
+    map_error = r##"|e| DataError::DiskError(e.to_string())"##,
+    ty = "DiskCache<String, Schedules>"
+)]
+pub async fn get_schedules_cached(lang: Option<String>) -> Result<schedules::Schedules, DataError> {
+    match get_schedules(lang).await  {
+        Ok(schedules) => Ok(schedules),
+        Err(error) => {
+            Err(DataError::NetworkError(error.to_string()))
+        }
+    }
+}
+
 pub fn filter_schedules(
     schedules: &[Schedule],
     count: usize,
@@ -175,7 +204,7 @@ mod test {
     use chrono::{Duration, Utc};
 
     use crate::data::{
-        fetch_translation, get_schedules, schedules::Schedules,
+        fetch_translation, get_schedules_cached, schedules::Schedules,
         translation::FlattenedTranslationDictionary,
     };
 
@@ -186,7 +215,7 @@ mod test {
 
     #[tokio::test]
     async fn test_get_schedules_online() {
-        let _schedules: Schedules = get_schedules(None).await.unwrap();
+        let _schedules: Schedules = get_schedules_cached(None).await.unwrap();
         dbg!(&_schedules);
     }
 
@@ -207,8 +236,9 @@ mod test {
 
     #[tokio::test]
     async fn test_get_schedules_online_with_translation() {
-        let _schedules_translated: Schedules =
-            get_schedules(Some("zh-CN".to_owned())).await.unwrap();
+        let _schedules_translated: Schedules = get_schedules_cached(Some("zh-CN".to_owned()))
+            .await
+            .unwrap();
         dbg!(&_schedules_translated);
     }
 

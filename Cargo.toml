@@ -10,6 +10,7 @@ keywords = ["terminal", "game", "splatoon", "splatoon_3"]
 categories = ["command-line-utilities"]
 
 [dependencies]
+cached = { version = "0.56.0", features = ["async", "async_tokio_rt_multi_thread", "disk_store"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 clap = { version = "4.5.40", features = ["derive", "unstable-doc"] }
 color-eyre = "0.6.5"
