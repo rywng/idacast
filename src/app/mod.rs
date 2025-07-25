@@ -32,7 +32,7 @@ static CACHE_STORE: LazyLock<DiskCache<String, Schedules>> = LazyLock::new(|| {
 // Update the schedules every 4 hours. There's no reason to change it.
 const AUTO_UPDATE_INTERVAL: Duration = Duration::hours(2);
 const CACHE_STORE_TTL: Duration = Duration::hours(4);
-pub const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
+pub(crate) const CACHE_STORE_NAME: &str = "IDACAST_CACHE";
 
 pub(crate) struct App {
     exit: bool,
