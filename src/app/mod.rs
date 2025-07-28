@@ -63,6 +63,7 @@ struct Battles {
 #[derive(Default)]
 struct Work {
     scroll_offset: usize,
+    schedules_count: usize,
 }
 
 #[derive(Default)]
@@ -255,9 +256,8 @@ impl App {
             AppEvent::ScheduleLoad(schedules) => {
                 if self.schedules != schedules {
                     self.schedules = schedules.clone();
-                    self.app_ui.battles.schedules_count =
-                        self.get_battle_schedules_count().unwrap_or(0);
                     CACHE_STORE.cache_set(format_option_string(&self.locale), schedules)?;
+                    self.set_schedules_count()
                 }
             }
         }
@@ -353,9 +353,14 @@ impl App {
             AppScreen::Battles => {
                 self.handle_battle_scrolling(operation);
             }
-            AppScreen::Work => todo!(),
-            AppScreen::Challenges => todo!(),
-            AppScreen::Fest => todo!(),
+            AppScreen::Work => { //TODO
+            }
+            AppScreen::Challenges => {
+                //TODO
+            }
+            AppScreen::Fest => {
+                // TODO
+            },
         }
     }
 
@@ -394,7 +399,8 @@ impl App {
             .saturating_sub(1 + (self.get_past_schedule_count()))
     }
 
-    fn get_battle_schedules_count(&self) -> Option<usize> {
+    fn set_schedules_count(&mut self) {
+        // TODO: the scrolling logic needs rewrite, this is too complicated
         let counts = [
             self.schedules.regular.len(),
             self.schedules.anarchy_open.len(),
@@ -402,7 +408,7 @@ impl App {
             self.schedules.x_battle.len(),
         ];
 
-        counts.iter().max().copied()
+        self.app_ui.battles.schedules_count = counts.iter().max().copied().unwrap_or(0);
     }
 
     fn get_past_schedule_count(&self) -> usize {

@@ -4,7 +4,7 @@ use crate::{
     app::{App, AppScreen, RefreshState},
     data::{
         filter_schedules,
-        schedules::{self, BattleSchedule, CoopSchedule, Schedule},
+        schedules::{BattleSchedule, CoopSchedule},
     },
 };
 use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
