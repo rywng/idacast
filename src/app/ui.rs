@@ -292,8 +292,7 @@ fn format_schedule_title(
     let rule = name.clone().bold().underlined();
     let time = format_stage_times(start_time, end_time).italic();
     let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
-    let line = Line::from(vec![rule, space, time]);
-    line
+    Line::from(vec![rule, space, time])
 }
 
 fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {

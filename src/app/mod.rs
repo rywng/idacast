@@ -63,7 +63,6 @@ struct Battles {
 #[derive(Default)]
 struct Work {
     scroll_offset: usize,
-    schedules_count: usize,
 }
 
 #[derive(Default)]
