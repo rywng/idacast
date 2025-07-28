@@ -1,6 +1,7 @@
+use crate::data::schedules::Schedule;
 use chrono::Local;
 use futures::join;
-use schedules::{Schedule, Schedules};
+use schedules::{Schedules};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{cmp::min, fmt::Display};
@@ -112,7 +113,7 @@ pub fn translate_schedules(
 
 fn translate_schedule(
     dict: &std::collections::HashMap<String, String>,
-    schedule: &mut schedules::Schedule,
+    schedule: &mut schedules::BattleSchedule,
 ) {
     for stage in &mut schedule.stages {
         *stage = stage.translate(dict);
@@ -209,8 +210,8 @@ mod test {
         dbg!(&_schedules_translated);
     }
 
-    fn get_test_schedule(time_now: chrono::DateTime<Utc>, i: i64) -> Schedule {
-        Schedule {
+    fn get_test_schedule(time_now: chrono::DateTime<Utc>, i: i64) -> BattleSchedule {
+        BattleSchedule {
             start_time: time_now - Duration::minutes(90) + Duration::hours(i * 2),
             end_time: time_now + Duration::minutes(30) + Duration::hours(i * 2),
             stages: get_test_stages(i.try_into().unwrap()),

@@ -2,9 +2,12 @@ use std::cmp::max;
 
 use crate::{
     app::{App, AppScreen, RefreshState},
-    data::{filter_schedules, schedules::Schedule},
+    data::{
+        filter_schedules,
+        schedules::{self, BattleSchedule, CoopSchedule, Schedule},
+    },
 };
-use chrono::{DateTime, Duration, Local, TimeDelta};
+use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
 use ratatui::{
     prelude::*,
     widgets::{Block, Paragraph, Tabs},
@@ -195,7 +198,7 @@ fn center_single_block(area: Rect, horizontal: Constraint, vertical: Constraint)
 }
 
 fn render_work(app: &App, frame: &mut Frame, area: Rect) {
-    let centered = center_single_block(
+    let area = center_single_block(
         area,
         Constraint::Max((area.width as f64 * 0.8).floor() as u16),
         Constraint::Max((area.height as f64 * 0.95).floor() as u16),
@@ -203,12 +206,50 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
     let block = Block::bordered()
         .border_style(Color::Red)
         .title("Grizzco Work");
-    let para = Paragraph::new(format!("{:#?}", app.schedules.work_regular));
-    frame.render_widget(para.block(block), centered);
+    render_work_widget(Some(&app.schedules.work_regular[..]), area, block, frame);
+}
+
+fn render_work_widget(
+    schedules: Option<&[CoopSchedule]>,
+    area: Rect,
+    block: Block,
+    frame: &mut Frame,
+) {
+    let sub_area = block.inner(area);
+    let content = match schedules {
+        Some(schedules) => {
+            let mut text: Vec<Line> = Vec::new();
+
+            for schedule in schedules {
+                let line = format_schedule_title(
+                    sub_area,
+                    schedule.stage.name.clone(),
+                    schedule.start_time,
+                    schedule.end_time,
+                );
+                text.push(line);
+                let boss = schedule.boss.name.clone().bold();
+                let weapons = schedule
+                    .weapons
+                    .iter()
+                    .map(|weapon| weapon.name.clone())
+                    .collect::<Vec<String>>()
+                    .join(" / ");
+                let mid_space = fill_mid_spaces(&boss.content, &weapons, sub_area);
+                text.push(Line::from(vec![weapons.italic(), mid_space.into(), boss.bold()]));
+                text.push(Line::from(""));
+            }
+
+            Paragraph::new(text)
+        }
+        None => Paragraph::new("Loading..."),
+    };
+
+    frame.render_widget(content.block(block), area);
 }
 
 fn render_schedule_widget(
-    schedules: Option<&[Schedule]>,
+    schedules: Option<&[BattleSchedule]>,
     area: Rect,
     block: Block,
     frame: &mut Frame,
@@ -218,10 +259,13 @@ fn render_schedule_widget(
         Some(schedules) => {
             let mut text: Vec<Line> = Vec::new();
             for schedule in schedules {
-                let rule = schedule.rule.name.clone().bold().underlined();
-                let time = format_stage_times(schedule).italic();
-                let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
-                text.push(Line::from(vec![rule, space, time]));
+                let line = format_schedule_title(
+                    sub_area,
+                    schedule.rule.name.clone(),
+                    schedule.start_time,
+                    schedule.end_time,
+                );
+                text.push(line);
                 for stage in &schedule.stages {
                     text.push(format!("- {}", stage.name).into());
                 }
@@ -233,6 +277,19 @@ fn render_schedule_widget(
     frame.render_widget(content.block(block), area);
 }
 
+fn format_schedule_title(
+    sub_area: Rect,
+    name: String,
+    start_time: DateTime<Utc>,
+    end_time: DateTime<Utc>,
+) -> Line<'static> {
+    let rule = name.clone().bold().underlined();
+    let time = format_stage_times(start_time, end_time).italic();
+    let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
+    let line = Line::from(vec![rule, space, time]);
+    line
+}
+
 fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
     let l_width = lhs.width_cjk();
     let r_width = rhs.width_cjk();
@@ -241,10 +298,10 @@ fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
     " ".repeat(space_count)
 }
 
-fn format_stage_times<T: Schedule>(schedule: &T) -> Span {
+fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Span<'static> {
     let time_now = Local::now();
-    let converted_start_time: DateTime<Local> = DateTime::from(schedule.get_start_time());
-    let converted_end_time: DateTime<Local> = DateTime::from(schedule.get_end_time());
+    let converted_start_time: DateTime<Local> = DateTime::from(start_time);
+    let converted_end_time: DateTime<Local> = DateTime::from(end_time);
     let remaining_time = converted_end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
         Span::from(
