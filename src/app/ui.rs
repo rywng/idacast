@@ -203,7 +203,8 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
     let block = Block::bordered()
         .border_style(Color::Red)
         .title("Grizzco Work");
-    render_schedule_widget(Some(&app.schedules.regular), centered, block, frame);
+    let para = Paragraph::new(format!("{:#?}", app.schedules.work_regular));
+    frame.render_widget(para.block(block), centered);
 }
 
 fn render_schedule_widget(
@@ -240,10 +241,10 @@ fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
     " ".repeat(space_count)
 }
 
-fn format_stage_times(schedule: &Schedule) -> Span {
+fn format_stage_times<T: Schedule>(schedule: &T) -> Span {
     let time_now = Local::now();
-    let converted_start_time: DateTime<Local> = DateTime::from(schedule.start_time);
-    let converted_end_time: DateTime<Local> = DateTime::from(schedule.end_time);
+    let converted_start_time: DateTime<Local> = DateTime::from(schedule.get_start_time());
+    let converted_end_time: DateTime<Local> = DateTime::from(schedule.get_end_time());
     let remaining_time = converted_end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
         Span::from(
@@ -303,4 +304,5 @@ mod test {
             "                                      ".to_string()
         );
     }
+    // TODO: I may need som tests for UI
 }

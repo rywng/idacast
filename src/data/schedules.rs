@@ -6,23 +6,38 @@ use super::{
     translation::{Dictionary, Translatable},
 };
 
+pub trait Schedule {
+    fn get_start_time(&self) -> DateTime<Utc>;
+    fn get_end_time(&self) -> DateTime<Utc>;
+}
+
 #[derive(Debug, Default, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub struct Schedules {
-    pub regular: Vec<Schedule>,
-    pub anarchy_open: Vec<Schedule>,
-    pub anarchy_series: Vec<Schedule>,
-    pub x_battle: Vec<Schedule>,
+    pub regular: Vec<BattleSchedule>,
+    pub anarchy_open: Vec<BattleSchedule>,
+    pub anarchy_series: Vec<BattleSchedule>,
+    pub x_battle: Vec<BattleSchedule>,
     pub work_regular: Vec<CoopSchedule>,
     pub work_big_run: Vec<CoopSchedule>,
     pub work_team_contest: Vec<CoopSchedule>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
-pub struct Schedule {
+pub struct BattleSchedule {
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
     pub stages: Vec<NameID>,
     pub rule: NameID,
+}
+
+impl Schedule for BattleSchedule {
+    fn get_start_time(&self) -> DateTime<Utc> {
+        self.start_time
+    }
+
+    fn get_end_time(&self) -> DateTime<Utc> {
+        self.end_time
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -32,6 +47,16 @@ pub struct CoopSchedule {
     pub boss: NameID,
     pub stage: NameID,
     pub weapons: Vec<NameID>,
+}
+
+impl Schedule for CoopSchedule {
+    fn get_start_time(&self) -> DateTime<Utc> {
+        self.start_time
+    }
+
+    fn get_end_time(&self) -> DateTime<Utc> {
+        self.end_time
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -84,9 +109,9 @@ impl From<&raw_data::CoopNode> for CoopSchedule {
     }
 }
 
-impl From<&raw_data::MatchNode> for Schedule {
+impl From<&raw_data::MatchNode> for BattleSchedule {
     fn from(value: &raw_data::MatchNode) -> Self {
-        Schedule {
+        BattleSchedule {
             start_time: value.start_time,
             end_time: value.end_time,
             stages: value
@@ -124,7 +149,7 @@ impl From<raw_data::RawData> for Schedules {
             .iter()
             .for_each(|schedule| {
                 for setting in &schedule.match_settings {
-                    let schedule_res = Schedule {
+                    let schedule_res = BattleSchedule {
                         start_time: schedule.start_time,
                         end_time: schedule.end_time,
                         stages: (setting

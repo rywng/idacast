@@ -139,15 +139,15 @@ pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules>
     }
 }
 
-pub fn filter_schedules(
-    schedules: &[Schedule],
+pub fn filter_schedules<T: Schedule>(
+    schedules: &[T],
     count: usize,
     shift: Option<usize>,
-) -> Option<&[Schedule]> {
+) -> Option<&[T]> {
     let mut start: Option<usize> = None;
     let time_now = Local::now();
     for (index, schedule) in schedules.iter().enumerate() {
-        if schedule.start_time <= time_now && schedule.end_time >= time_now {
+        if schedule.get_start_time() <= time_now && schedule.get_end_time() >= time_now {
             start = Some(index);
             break;
         }
@@ -176,7 +176,10 @@ mod test {
         translation::FlattenedTranslationDictionary,
     };
 
-    use super::{filter_schedules, schedules::{NameID, Schedule}};
+    use super::{
+        filter_schedules,
+        schedules::{BattleSchedule, NameID},
+    };
 
     #[tokio::test]
     async fn test_get_schedules_online() {
