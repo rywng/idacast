@@ -122,7 +122,7 @@ enum AppEvent {
 enum RefreshState {
     #[default]
     Pending,
-    Completed(DateTime<Local>),
+    Completed(DateTime<Local>, bool),
     Error(Report),
 }
 
@@ -185,7 +185,7 @@ impl App {
         match schedules_result {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
-                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now())))?;
+                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now(), cached)))?;
             }
             Err(err) => {
                 tx.send(AppEvent::Refresh(RefreshState::Error(err)))?;

@@ -93,8 +93,10 @@ fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
     .fg(Color::Gray);
     let status = match &app.refresh_state {
         RefreshState::Pending => Span::from("Updating..."),
-        RefreshState::Completed(time) => {
-            Span::from(format!("Last updated: {}", time.format("%H:%M:%S")))
+        RefreshState::Completed(time, cached) => {
+            Span::from(format!("Last updated: {}{}", time.format("%H:%M:%S"), {
+                if *cached { " (cached)" } else { "" }
+            }))
         }
         RefreshState::Error(report) => Span::from(format!("Failed to update: {report}")),
     }
@@ -236,7 +238,11 @@ fn render_work_widget(
                     .collect::<Vec<String>>()
                     .join(" / ");
                 let mid_space = fill_mid_spaces(&boss.content, &weapons, sub_area);
-                text.push(Line::from(vec![weapons.italic(), mid_space.into(), boss.bold()]));
+                text.push(Line::from(vec![
+                    weapons.italic(),
+                    mid_space.into(),
+                    boss.bold(),
+                ]));
                 text.push(Line::from(""));
             }
 
