@@ -166,16 +166,18 @@ impl App {
     async fn handle_refresh(
         tx: UnboundedSender<AppEvent>,
         lang: Option<String>,
-        cached: bool,
+        use_cache: bool,
     ) -> Result<()> {
         tx.send(AppEvent::Refresh(RefreshState::Pending))?;
 
         let cached_opt = App::get_cache(&format_option_string(&lang))?;
         let fetch_online = async || get_schedules(lang).await;
+        let mut cache_hit = false;
 
-        let schedules_result: Result<Schedules> = if !cached {
+        let schedules_result: Result<Schedules> = if !use_cache {
             Ok(fetch_online().await?)
         } else if let Some(schedules) = cached_opt {
+            cache_hit = true;
             Ok(schedules)
         } else {
             Ok(fetch_online().await?)
@@ -184,7 +186,7 @@ impl App {
         match schedules_result {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
-                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now(), cached)))?;
+                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now(), cache_hit)))?;
             }
             Err(err) => {
                 tx.send(AppEvent::Refresh(RefreshState::Error(err)))?;
