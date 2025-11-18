@@ -23,7 +23,7 @@ pub(super) struct Data {
     pub regular_schedules: ScheduleContainer<MatchNode>,
     pub bankara_schedules: ScheduleContainer<MatchNodeBankara>,
     pub x_schedules: ScheduleContainer<MatchNode>,
-    // event_schedules: MatchSchedules,
+    pub event_schedules: ScheduleContainer<MatchNodeLeague>,
     // fest_schedules: MatchSchedules,
     pub coop_grouping_schedule: CoopGroupingSchedule,
     // current_fest: MatchSchedules,
@@ -116,13 +116,49 @@ pub(super) struct BankaraMatchSetting {
     pub bankara_mode: BankaraMode,
 }
 
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct MatchNodeLeague {
+    pub league_match_setting: LeagueMatchSetting,
+    pub time_periods: Vec<TimePeriod>,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct LeagueMatchSetting {
+    #[serde(flatten)]
+    pub match_setting: MatchSetting,
+    pub league_match_event: LeagueMatchEvent,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct LeagueMatchEvent {
+    league_match_event_id: String,
+    name: String,
+    desc: String,
+    regulation: String,
+}
+
+#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct TimePeriod {
+    pub start_time: chrono::DateTime<Utc>,
+    pub end_time: chrono::DateTime<Utc>,
+}
+
 #[cfg(test)]
 mod test {
     use chrono::{TimeZone, Utc};
 
-    use crate::data::raw_data::{BankaraMatchSetting, BankaraMode, MatchNodeBankara, RawData};
+    use crate::data::raw_data::{
+        BankaraMatchSetting, BankaraMode, MatchNodeBankara, RawData, TimePeriod,
+    };
 
-    use super::{CoopNode, CoopSetting, MatchNode, MatchSetting, NameID};
+    use super::{
+        CoopNode, CoopSetting, LeagueMatchEvent, LeagueMatchSetting, MatchNode, MatchNodeLeague,
+        MatchSetting, NameID,
+    };
 
     #[test]
     fn test_deserialize_regular_match() {
@@ -319,5 +355,31 @@ mod test {
 
         let parsed: CoopNode = serde_json::from_str(&example_schedule).unwrap();
         assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn test_deserialize_league_match() {
+        let example_schedule_node = r#"        { "leagueMatchSetting": { "leagueMatchEvent": { "leagueMatchEventId": "SpecialRush_UltraShot", "name": "Too Many Trizookas!", "desc": "A high-powered Trizooka battle!", "regulationUrl": null, "regulation": "Can you defeat a Trizooka user with a Trizooka of your own?! Now's the time to find out!<br /><br />・ You can only use weapons that come with the Trizooka special.<br />・ The special gauge will fill quickly all by itself!<br />・ Only primary gear abilities will be enabled! Secondary abilities will have no effect.", "id": "TGVhZ3VlTWF0Y2hFdmVudC1TcGVjaWFsUnVzaF9VbHRyYVNob3Q=" }, "vsStages": [ { "vsStageId": 2, "name": "Eeltail Alley", "image": { "url": "https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/898e1ae6c737a9d44552c7c81f9b710676492681525c514eadc68a6780aa52af_1.png" }, "id": "VnNTdGFnZS0y" }, { "vsStageId": 26, "name": "Urchin Underpass", "image": { "url": "https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/249c981fdd888e79ada712ddf899bddbead508d71043af3ff96c90a7b5959c73_1.png" }, "id": "VnNTdGFnZS0yNg==" } ], "__isVsSetting": "LeagueMatchSetting", "__typename": "LeagueMatchSetting", "vsRule": { "name": "Rainmaker", "rule": "GOAL", "id": "VnNSdWxlLTM=" } }, "timePeriods": [ { "startTime": "2025-11-24T02:00:00Z", "endTime": "2025-11-24T04:00:00Z" }, { "startTime": "2025-11-24T06:00:00Z", "endTime": "2025-11-24T08:00:00Z" }  ] }"#;
+        let expected: MatchNodeLeague = MatchNodeLeague { league_match_setting: LeagueMatchSetting { match_setting: MatchSetting { vs_stages: vec![
+            NameID {
+                name: "Eeltail Alley".to_string(),
+                id: "VnNTdGFnZS0y".to_string()
+            },
+            NameID {
+                name: "Urchin Underpass".to_string(),
+                id: "VnNTdGFnZS0yNg==".to_string()
+            }
+            ],
+            vs_rule: NameID { name: "Rainmaker".to_string(), id: "VnNSdWxlLTM=".to_string() } },
+            league_match_event: LeagueMatchEvent{ league_match_event_id: "SpecialRush_UltraShot".to_string(), name: "Too Many Trizookas!".to_string(), desc: "A high-powered Trizooka battle!".to_string(), regulation: "Can you defeat a Trizooka user with a Trizooka of your own?! Now's the time to find out!<br /><br />・ You can only use weapons that come with the Trizooka special.<br />・ The special gauge will fill quickly all by itself!<br />・ Only primary gear abilities will be enabled! Secondary abilities will have no effect.".to_string(),},
+        },
+            time_periods: vec![
+                TimePeriod { start_time: Utc.with_ymd_and_hms(2025, 11, 24, 2, 0, 0).unwrap(), end_time: Utc.with_ymd_and_hms(2025, 11, 24, 4, 0, 0).unwrap() },
+                TimePeriod{ start_time: Utc.with_ymd_and_hms(2025, 11, 24, 6, 0, 0).unwrap(), end_time: Utc.with_ymd_and_hms(2025, 11, 24, 8, 0, 0).unwrap()}
+            ] 
+
+    };
+        let parsed_schedule: MatchNodeLeague = serde_json::from_str(example_schedule_node).unwrap();
+        assert_eq!(parsed_schedule, expected);
     }
 }
