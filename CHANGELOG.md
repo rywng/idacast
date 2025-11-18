@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5](https://github.com/rywng/idacast/compare/v0.1.4...v0.1.5) - 2025-11-18
+
+### Added
+
+- Add a reminder that fest page is not yet available
+- Fine-tune the position of description text
+- *(app)* Now able to view challenge events with better time display
+- *(app)* Support loading the schedules to the software memory
+- *(app)* Add ability to deserialize league match schedule
+
+### Fixed
+
+- use id in favor of leagueMatchEventId
+
+### Other
+
+- remove unused imports
+- format code
+- Upload screenshots to README
+- Add screenshots of the cli
+- *(app)* Fix formatting
+- *(ui)* change function names to make it clear
+
 ## [0.1.4](https://github.com/rywng/idacast/compare/v0.1.3...v0.1.4) - 2025-11-18
 
 ### Added
