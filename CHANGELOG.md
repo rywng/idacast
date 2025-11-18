@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3](https://github.com/rywng/idacast/compare/v0.1.2...v0.1.3) - 2025-11-11
+
+### Fixed
+
+- Cached status not showing up correctly
+
+### Other
+
+- update deps
+- add samples for schedules
+- fix doc link
+
 ## [0.1.2](https://github.com/rywng/idacast/compare/v0.1.1...v0.1.2) - 2025-07-28
 
 ### Added
