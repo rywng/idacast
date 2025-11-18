@@ -186,7 +186,10 @@ impl App {
         match schedules_result {
             Ok(schedules) => {
                 tx.send(AppEvent::ScheduleLoad(schedules))?;
-                tx.send(AppEvent::Refresh(RefreshState::Completed(Local::now(), cache_hit)))?;
+                tx.send(AppEvent::Refresh(RefreshState::Completed(
+                    Local::now(),
+                    cache_hit,
+                )))?;
             }
             Err(err) => {
                 tx.send(AppEvent::Refresh(RefreshState::Error(err)))?;
@@ -361,7 +364,7 @@ impl App {
             }
             AppScreen::Fest => {
                 // TODO
-            },
+            }
         }
     }
 

@@ -1,7 +1,7 @@
 use crate::data::schedules::Schedule;
 use chrono::Local;
 use futures::join;
-use schedules::{Schedules};
+use schedules::Schedules;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{cmp::min, fmt::Display};

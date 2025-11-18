@@ -214,7 +214,7 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
     render_work_widget(
         filter_schedules(
             &app.schedules.work_regular,
-            area.height as usize / 3 ,
+            area.height as usize / 3,
             Some(app.app_ui.work.scroll_offset),
         ),
         area,
