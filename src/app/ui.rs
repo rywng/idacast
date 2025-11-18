@@ -42,7 +42,10 @@ pub fn draw(app: &App, frame: &mut Frame) {
 }
 
 fn render_header(app: &App, frame: &mut Frame<'_>, header_area: Rect) {
-    let time = Local::now().format("%H:%M:%S").to_string().fg(Color::Gray);
+    let time = Local::now()
+        .format("%H:%M:%S <%a>")
+        .to_string()
+        .fg(Color::Gray);
     let title = "IdaCast".bold().fg(Color::Green);
 
     let tab_titles = AppScreen::iter().map(AppScreen::to_tab_title);
@@ -305,9 +308,9 @@ fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
 
 fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Span<'static> {
     let time_now = Local::now();
-    let converted_start_time: DateTime<Local> = DateTime::from(start_time);
-    let converted_end_time: DateTime<Local> = DateTime::from(end_time);
-    let remaining_time = converted_end_time - time_now;
+    let start_time: DateTime<Local> = DateTime::from(start_time);
+    let end_time: DateTime<Local> = DateTime::from(end_time);
+    let remaining_time = end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
         Span::from(
             [
@@ -327,12 +330,21 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
             .concat(),
         )
     } else {
-        format!(
-            "{} - {}",
-            converted_start_time.format("%H:%M"),
-            converted_end_time.format("%H:%M")
-        )
-        .into()
+        let start_time_str = if time_now.date_naive() != start_time.date_naive()
+            && start_time.date_naive() != end_time.date_naive()
+        {
+            start_time.format("%H:%M <%a>")
+        } else {
+            // For example, the battle schedules tomorrow, there's no need to display week day
+            // twice, so only display time in start time.
+            start_time.format("%H:%M")
+        };
+        let end_time_str = if time_now.date_naive() != end_time.date_naive() {
+            end_time.format("%H:%M <%a>")
+        } else {
+            end_time.format("%H:%M")
+        };
+        format!("{} - {}", start_time_str, end_time_str).into()
     }
 }
 
