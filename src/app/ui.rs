@@ -444,7 +444,6 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
             .concat(),
         )
     } else {
-
         fn format_time_with_date(time_now: DateTime<Local>, time: DateTime<Local>) -> String {
             if time.date_naive() - time_now.date_naive() >= TimeDelta::weeks(1) {
                 time.format("%H:%M <%a %x>").to_string()
@@ -470,7 +469,6 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
         format!("{} - {}", start_time_str, end_time_str).into()
     }
 }
-
 
 #[cfg(test)]
 mod test {
