@@ -211,7 +211,16 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
     let block = Block::bordered()
         .border_style(Color::Red)
         .title("Grizzco Work");
-    render_work_widget(Some(&app.schedules.work_regular[..]), area, block, frame);
+    render_work_widget(
+        filter_schedules(
+            &app.schedules.work_regular,
+            area.height as usize / 3 ,
+            Some(app.app_ui.work.scroll_offset),
+        ),
+        area,
+        block,
+        frame,
+    );
 }
 
 fn render_work_widget(
