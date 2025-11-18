@@ -34,7 +34,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
     render_footer(app, frame, footer_area);
 
     match app.app_ui.current_screen {
-        AppScreen::Battles => render_stages(app, frame, content_area),
+        AppScreen::Battles => render_battle_stages(app, frame, content_area),
         AppScreen::Work => render_work(app, frame, content_area),
         AppScreen::Challenges => {}
         AppScreen::Fest => {}
@@ -118,7 +118,7 @@ fn render_footer(app: &App, frame: &mut Frame<'_>, footer_area: Rect) {
     frame.render_widget(scroll_info, scroll_info_area);
 }
 
-fn render_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
+fn render_battle_stages(app: &App, frame: &mut Frame<'_>, stage_area: Rect) {
     let [bankara_area, battle_area] =
         Layout::vertical([Constraint::Min(5), Constraint::Min(5)]).areas(stage_area);
 
