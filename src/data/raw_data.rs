@@ -134,7 +134,7 @@ pub(super) struct LeagueMatchSetting {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct LeagueMatchEvent {
-    league_match_event_id: String,
+    id: String,
     name: String,
     desc: String,
     regulation: String,
@@ -371,7 +371,7 @@ mod test {
             }
             ],
             vs_rule: NameID { name: "Rainmaker".to_string(), id: "VnNSdWxlLTM=".to_string() } },
-            league_match_event: LeagueMatchEvent{ league_match_event_id: "SpecialRush_UltraShot".to_string(), name: "Too Many Trizookas!".to_string(), desc: "A high-powered Trizooka battle!".to_string(), regulation: "Can you defeat a Trizooka user with a Trizooka of your own?! Now's the time to find out!<br /><br />・ You can only use weapons that come with the Trizooka special.<br />・ The special gauge will fill quickly all by itself!<br />・ Only primary gear abilities will be enabled! Secondary abilities will have no effect.".to_string(),},
+            league_match_event: LeagueMatchEvent{ id: "TGVhZ3VlTWF0Y2hFdmVudC1TcGVjaWFsUnVzaF9VbHRyYVNob3Q=".to_string(), name: "Too Many Trizookas!".to_string(), desc: "A high-powered Trizooka battle!".to_string(), regulation: "Can you defeat a Trizooka user with a Trizooka of your own?! Now's the time to find out!<br /><br />・ You can only use weapons that come with the Trizooka special.<br />・ The special gauge will fill quickly all by itself!<br />・ Only primary gear abilities will be enabled! Secondary abilities will have no effect.".to_string(),},
         },
         time_periods: vec![
             TimePeriod { start_time: Utc.with_ymd_and_hms(2025, 11, 24, 2, 0, 0).unwrap(), end_time: Utc.with_ymd_and_hms(2025, 11, 24, 4, 0, 0).unwrap() },
