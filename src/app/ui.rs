@@ -325,7 +325,7 @@ fn render_challenges(app: &App, frame: &mut Frame, area: Rect) {
 fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: &mut Frame) {
     let block = Block::bordered()
         .title(Line::from(challenge_event.event_name.name.clone()).centered())
-        .title_bottom(Line::from(challenge_event.desc.clone()).left_aligned())
+        .title_bottom(Line::from(challenge_event.desc.clone()).right_aligned())
         .border_style(Style::new().magenta());
 
     let mut content: Vec<Line> = Vec::new();
