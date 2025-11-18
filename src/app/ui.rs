@@ -37,7 +37,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
         AppScreen::Battles => render_battle_stages(app, frame, content_area),
         AppScreen::Work => render_work(app, frame, content_area),
         AppScreen::Challenges => render_challenges(app, frame, content_area),
-        AppScreen::Fest => {}
+        AppScreen::Fest => render_splatfest(app, frame, content_area),
     }
 }
 
@@ -369,6 +369,15 @@ fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: 
             .wrap(Wrap { trim: true })
             .block(block),
         area,
+    );
+}
+
+fn render_splatfest(_app: &App, frame: &mut Frame, area: Rect) {
+    render_error_widget(
+        frame,
+        area,
+        "Not Implemented!",
+        "This page hasn't been implemented yet. See \n https://github.com/rywng/idacast/issues/9",
     );
 }
 
