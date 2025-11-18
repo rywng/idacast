@@ -1,4 +1,3 @@
-use core::time;
 use std::cmp::{max, min};
 
 use crate::{
@@ -8,7 +7,7 @@ use crate::{
         schedules::{BattleSchedule, CoopSchedule, LeagueSchedule},
     },
 };
-use chrono::{DateTime, Duration, Local, NaiveDate, NaiveTime, TimeDelta, Utc};
+use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
 use ratatui::{
     prelude::*,
     widgets::{Block, Paragraph, Tabs, Wrap},
