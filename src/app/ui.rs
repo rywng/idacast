@@ -36,7 +36,7 @@ pub fn draw(app: &App, frame: &mut Frame) {
     match app.app_ui.current_screen {
         AppScreen::Battles => render_battle_stages(app, frame, content_area),
         AppScreen::Work => render_work(app, frame, content_area),
-        AppScreen::Challenges => {}
+        AppScreen::Challenges => render_challenges(app, frame, content_area),
         AppScreen::Fest => {}
     }
 }
@@ -293,6 +293,10 @@ fn render_schedule_widget(
         None => Paragraph::new("Loading..."),
     };
     frame.render_widget(content.block(block), area);
+}
+
+fn render_challenges(app: &App, frame: &mut Frame, area: Rect) {
+    frame.render_widget(Paragraph::new(format!("{:#?}", app.schedules.league)), area);
 }
 
 fn format_schedule_title(

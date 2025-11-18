@@ -2,7 +2,7 @@ use chrono::{self, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::{
-    raw_data::{self},
+    raw_data::{self, TimePeriod},
     translation::{Dictionary, Translatable},
 };
 
@@ -20,6 +20,7 @@ pub struct Schedules {
     pub work_regular: Vec<CoopSchedule>,
     pub work_big_run: Vec<CoopSchedule>,
     pub work_team_contest: Vec<CoopSchedule>,
+    pub league: Vec<LeagueSchedule>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -57,6 +58,16 @@ impl Schedule for CoopSchedule {
     fn get_end_time(&self) -> DateTime<Utc> {
         self.end_time
     }
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub struct LeagueSchedule {
+    pub event_name: NameID,
+    pub desc: String,
+    pub details: String,
+    pub stages: Vec<NameID>,
+    pub rule: NameID,
+    pub time_periods: Vec<TimePeriod>,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -125,6 +136,32 @@ impl From<&raw_data::MatchNode> for BattleSchedule {
     }
 }
 
+impl From<&raw_data::MatchNodeLeague> for LeagueSchedule {
+    fn from(value: &raw_data::MatchNodeLeague) -> Self {
+        LeagueSchedule {
+            event_name: NameID {
+                name: value.league_match_setting.league_match_event.name.clone(),
+                id: value.league_match_setting.league_match_event.id.clone(),
+            },
+            desc: value.league_match_setting.league_match_event.desc.clone(),
+            details: value
+                .league_match_setting
+                .league_match_event
+                .regulation
+                .clone(),
+            rule: (&value.league_match_setting.match_setting.vs_rule).into(),
+            stages: value
+                .league_match_setting
+                .match_setting
+                .vs_stages
+                .iter()
+                .map(|stage| stage.into())
+                .collect(),
+            time_periods: value.time_periods.clone(),
+        }
+    }
+}
+
 impl From<raw_data::RawData> for Schedules {
     fn from(value: raw_data::RawData) -> Self {
         let mut res = Self::default();
@@ -180,6 +217,11 @@ impl From<raw_data::RawData> for Schedules {
             .for_each(|schedule| {
                 res.work_regular.push(schedule.into());
             });
+
+        value.data.event_schedules.nodes.iter().for_each(|event| {
+            res.league.push(event.into());
+        });
+
         res
     }
 }

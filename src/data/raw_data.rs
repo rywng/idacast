@@ -1,6 +1,6 @@
 /// Raw JSON data fetched from splatoon3.ink
 use chrono::{self, Utc};
-use serde::{self, Deserialize};
+use serde::{self, Deserialize, Serialize};
 
 #[derive(Deserialize)]
 /// The root of the splatoon3.ink json is a data object, so we need to wrap it.
@@ -134,13 +134,13 @@ pub(super) struct LeagueMatchSetting {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct LeagueMatchEvent {
-    id: String,
-    name: String,
-    desc: String,
-    regulation: String,
+    pub id: String,
+    pub name: String,
+    pub desc: String,
+    pub regulation: String,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct TimePeriod {
     pub start_time: chrono::DateTime<Utc>,
