@@ -1,16 +1,17 @@
-use std::cmp::max;
+use core::time;
+use std::cmp::{max, min};
 
 use crate::{
     app::{App, AppScreen, RefreshState},
     data::{
         filter_schedules,
-        schedules::{BattleSchedule, CoopSchedule},
+        schedules::{BattleSchedule, CoopSchedule, LeagueSchedule},
     },
 };
-use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
+use chrono::{DateTime, Duration, Local, NaiveDate, NaiveTime, TimeDelta, Utc};
 use ratatui::{
     prelude::*,
-    widgets::{Block, Paragraph, Tabs},
+    widgets::{Block, Paragraph, Tabs, Wrap},
 };
 use strum::IntoEnumIterator;
 use unicode_width::UnicodeWidthStr;
@@ -296,7 +297,107 @@ fn render_schedule_widget(
 }
 
 fn render_challenges(app: &App, frame: &mut Frame, area: Rect) {
-    frame.render_widget(Paragraph::new(format!("{:#?}", app.schedules.league)), area);
+    if app.schedules.league.is_empty() {
+        render_error_widget(
+            frame,
+            area,
+            "No Data.",
+            "Either the program is loading, or there won't be a new event challenge anytime soon.",
+        );
+        return;
+    }
+
+    let divided_areas: [_; 2] = if area.width > area.height * 2 {
+        // Only need to have horizontal spacing, no need for vertical.
+        Layout::horizontal([Constraint::Fill(1), Constraint::Fill(1)])
+            .flex(layout::Flex::SpaceAround)
+            .spacing(1)
+            .areas(area)
+    } else {
+        Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).areas(area)
+    };
+
+    for (index, challenge) in app.schedules.league.iter().enumerate() {
+        render_challenge_widget(challenge, divided_areas[index], frame);
+    }
+}
+
+fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: &mut Frame) {
+    let block = Block::bordered()
+        .title(Line::from(challenge_event.event_name.name.clone()).centered())
+        .title_bottom(Line::from(challenge_event.desc.clone()).left_aligned())
+        .border_style(Style::new().magenta());
+
+    let mut content: Vec<Line> = Vec::new();
+
+    content.push(Line::from("~~~~~*****~~~~~").centered());
+    let rule_name = &challenge_event.rule.name;
+    let maps: Vec<String> = challenge_event
+        .stages
+        .iter()
+        .map(|stage| stage.name.clone())
+        .collect();
+    let rhs = maps.join(" / ");
+    let mid_spaces = "      ";
+    content.push(
+        Line::from(vec![
+            Span::from(rule_name.clone()).underlined().bold(),
+            mid_spaces.into(),
+            Span::from(rhs).italic(),
+        ])
+        .centered(),
+    );
+
+    content.push("".into());
+    for time_period in &challenge_event.time_periods {
+        content.push(
+            Line::from(format_stage_times(
+                time_period.start_time,
+                time_period.end_time,
+            ))
+            .centered(),
+        );
+    }
+
+    content.push("".into());
+    challenge_event
+        .details
+        .split_terminator("<br />")
+        .for_each(|item| content.push(Line::from(item).italic()));
+
+    frame.render_widget(
+        Paragraph::new(content)
+            .wrap(Wrap { trim: true })
+            .block(block),
+        area,
+    );
+}
+
+const ERR_WIDGET_WIDTH: u16 = 48;
+
+fn render_error_widget(frame: &mut Frame<'_>, area: Rect, title: &str, reason: &str) {
+    let error_msg = Paragraph::new(vec![
+        Line::from(title).bold().centered(),
+        Line::from(""),
+        Line::from(reason),
+    ]);
+    frame.render_widget(
+        error_msg.wrap(ratatui::widgets::Wrap { trim: true }).block(
+            Block::bordered()
+                .title("Error")
+                .border_style(Style::new().red()),
+        ),
+        center_single_block(
+            area,
+            Constraint::Max(ERR_WIDGET_WIDTH),
+            Constraint::Max(
+                (u16::try_from(reason.len() + 20).unwrap() / min(ERR_WIDGET_WIDTH, area.width - 2))
+                    + 4,
+            ),
+        ),
+        // This code doesn't take spaces introduced by wrapping into consideration, but it's good
+        // enough.
+    );
 }
 
 fn format_schedule_title(
@@ -343,23 +444,33 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
             .concat(),
         )
     } else {
+
+        fn format_time_with_date(time_now: DateTime<Local>, time: DateTime<Local>) -> String {
+            if time.date_naive() - time_now.date_naive() >= TimeDelta::weeks(1) {
+                time.format("%H:%M <%a %x>").to_string()
+            } else {
+                time.format("%H:%M <%a>").to_string()
+            }
+        }
+
         let start_time_str = if time_now.date_naive() != start_time.date_naive()
             && start_time.date_naive() != end_time.date_naive()
         {
-            start_time.format("%H:%M <%a>")
+            format_time_with_date(time_now, start_time)
         } else {
             // For example, the battle schedules tomorrow, there's no need to display week day
             // twice, so only display time in start time.
-            start_time.format("%H:%M")
+            start_time.format("%H:%M").to_string()
         };
         let end_time_str = if time_now.date_naive() != end_time.date_naive() {
-            end_time.format("%H:%M <%a>")
+            format_time_with_date(time_now, end_time)
         } else {
-            end_time.format("%H:%M")
+            end_time.format("%H:%M").to_string()
         };
         format!("{} - {}", start_time_str, end_time_str).into()
     }
 }
+
 
 #[cfg(test)]
 mod test {

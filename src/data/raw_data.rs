@@ -142,7 +142,7 @@ pub(super) struct LeagueMatchEvent {
 
 #[derive(Deserialize, Debug, PartialEq, Eq, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub(super) struct TimePeriod {
+pub struct TimePeriod {
     pub start_time: chrono::DateTime<Utc>,
     pub end_time: chrono::DateTime<Utc>,
 }
