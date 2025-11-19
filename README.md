@@ -34,7 +34,7 @@ idacast --help
 
 ## Screenshots
 
-<img alt="screenshot of challenge tab" src="https://github.com/user-attachments/assets/3cef07a7-fd5e-4451-b624-3cac26f37a47" /> 
+<img alt="screenshot of challenge tab" src="https://github.com/user-attachments/assets/3cef07a7-fd5e-4451-b624-3cac26f37a47" />
 
 <img alt="screenshot of regular battles tab" src="https://github.com/user-attachments/assets/00bc5926-459d-4412-bd44-99d72e1a026b" />
 
