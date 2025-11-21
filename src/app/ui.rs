@@ -7,7 +7,7 @@ use crate::{
         schedules::{BattleSchedule, CoopSchedule, LeagueSchedule},
     },
 };
-use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
+use chrono::{DateTime, Duration, Local, SubsecRound, TimeDelta, Utc};
 use ratatui::{
     prelude::*,
     widgets::{Block, Paragraph, Tabs, Wrap},
@@ -429,7 +429,9 @@ fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
 }
 
 fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Span<'static> {
-    let time_now = Local::now();
+    let time_now = Local::now().round_subsecs(0); // Due to how this software is run, the time now
+    // will be slightly later than a whole second, thus the remaining time will be a bit less than
+    // a whole second. Round to the nearest whole second in this case.
     let start_time: DateTime<Local> = DateTime::from(start_time);
     let end_time: DateTime<Local> = DateTime::from(end_time);
     let remaining_time = end_time - time_now;
@@ -444,9 +446,9 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
                     }
                 },
                 format!(
-                    "{}m {:.0}s remaining",
+                    "{}m {}s remaining",
                     remaining_time.num_minutes() % 60,
-                    (remaining_time.num_milliseconds() % 60000) as f64 / 1000.0,
+                    remaining_time.num_seconds() % 60,
                 ),
             ]
             .concat(),
