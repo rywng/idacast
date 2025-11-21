@@ -436,7 +436,6 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Str
     let end_time: DateTime<Local> = DateTime::from(end_time);
     let remaining_time = end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
-        String::from(
             [
                 {
                     if remaining_time.num_hours() != 0 {
@@ -451,8 +450,7 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Str
                     remaining_time.num_seconds() % 60,
                 ),
             ]
-            .concat(),
-        )
+            .concat()
     } else {
         fn format_time_with_date(time_now: DateTime<Local>, time: DateTime<Local>) -> String {
             if time.date_naive() - time_now.date_naive() >= TimeDelta::weeks(1) {
