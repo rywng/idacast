@@ -85,7 +85,7 @@ pub(crate) enum AppScreen {
 }
 
 impl AppScreen {
-    fn to_tab_title(value: Self) -> ratatui::text::Line<'static> {
+    fn to_tab_title<'a>(value: Self) -> ratatui::text::Line<'a> {
         let text = value.to_string();
         let color = match value {
             AppScreen::Battles => Color::LightGreen,

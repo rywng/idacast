@@ -408,12 +408,12 @@ fn render_error_widget(frame: &mut Frame<'_>, area: Rect, title: &str, reason: &
     );
 }
 
-fn format_schedule_title(
+fn format_schedule_title<'a>(
     sub_area: Rect,
     name: String,
     start_time: DateTime<Utc>,
     end_time: DateTime<Utc>,
-) -> Line<'static> {
+) -> Line<'a> {
     let rule = name.clone().bold().underlined();
     let time = format_stage_times(start_time, end_time).italic();
     let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
@@ -428,7 +428,7 @@ fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
     " ".repeat(space_count)
 }
 
-fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Span<'static> {
+fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> String {
     let time_now = Local::now().round_subsecs(0); // Due to how this software is run, the time now
     // will be slightly later than a whole second, thus the remaining time will be a bit less than
     // a whole second. Round to the nearest whole second in this case.
@@ -436,7 +436,7 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
     let end_time: DateTime<Local> = DateTime::from(end_time);
     let remaining_time = end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
-        Span::from(
+        String::from(
             [
                 {
                     if remaining_time.num_hours() != 0 {
@@ -476,7 +476,7 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
         } else {
             end_time.format("%H:%M").to_string()
         };
-        format!("{} - {}", start_time_str, end_time_str).into()
+        format!("{} - {}", start_time_str, end_time_str)
     }
 }
 
