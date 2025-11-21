@@ -446,7 +446,7 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Spa
                     }
                 },
                 format!(
-                    "{}m {}s remaining",
+                    "{}m {:>2}s remaining",
                     remaining_time.num_minutes() % 60,
                     remaining_time.num_seconds() % 60,
                 ),
