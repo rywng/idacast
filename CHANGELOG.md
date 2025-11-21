@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/rywng/idacast/compare/v0.1.5...v0.1.6) - 2025-11-21
+
+### Fixed
+
+- *(ui)* Fix the formatting of time remaining.
+
+### Other
+
+- Merge remote-tracking branch 'refs/remotes/origin/master'
+- *(README)* Use pure image instead of table
+- *(README)* Try to fix the image formatting
+
 ## [0.1.5](https://github.com/rywng/idacast/compare/v0.1.4...v0.1.5) - 2025-11-18
 
 ### Added
