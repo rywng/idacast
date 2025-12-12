@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/rywng/idacast/compare/v0.1.6...v0.1.7) - 2025-12-12
+
+### Added
+
+- *(ui)* Also pad the remaining minute
+- pad the second for better readability
+
+### Fixed
+
+- *(ui)* Fix challenge title display
+
+### Other
+
+- Update dependencies
+- Revert "feat(ui): Also pad the remaining minute"
+- *(ui)* Clean up code
+- *(app)* Use proper lifetime annotation instead of static
+
 ## [0.1.6](https://github.com/rywng/idacast/compare/v0.1.5...v0.1.6) - 2025-11-21
 
 ### Fixed
