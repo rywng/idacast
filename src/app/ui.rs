@@ -321,10 +321,14 @@ fn render_challenges(app: &App, frame: &mut Frame, area: Rect) {
     }
 }
 
+const HTML_NEW_LINE: &str = "<br />";
+
 fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: &mut Frame) {
     let block = Block::bordered()
         .title(Line::from(challenge_event.event_name.name.clone()).centered())
-        .title_bottom(Line::from(challenge_event.desc.clone()).right_aligned())
+        .title_bottom(
+            Line::from(challenge_event.desc.clone().replace(HTML_NEW_LINE, "")).right_aligned(),
+        )
         .border_style(Style::new().magenta());
 
     let mut content: Vec<Line> = Vec::new();
@@ -361,7 +365,7 @@ fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: 
     content.push("".into());
     challenge_event
         .details
-        .split_terminator("<br />")
+        .split_terminator(HTML_NEW_LINE)
         .for_each(|item| content.push(Line::from(item).italic()));
 
     frame.render_widget(
@@ -436,21 +440,21 @@ fn format_stage_times(start_time: DateTime<Utc>, end_time: DateTime<Utc>) -> Str
     let end_time: DateTime<Local> = DateTime::from(end_time);
     let remaining_time = end_time - time_now;
     if remaining_time <= Duration::hours(2) && remaining_time >= TimeDelta::zero() {
-            [
-                {
-                    if remaining_time.num_hours() != 0 {
-                        format!("{}h ", remaining_time.num_hours())
-                    } else {
-                        "".to_string()
-                    }
-                },
-                format!(
-                    "{}m {:>2}s remaining",
-                    remaining_time.num_minutes() % 60,
-                    remaining_time.num_seconds() % 60,
-                ),
-            ]
-            .concat()
+        [
+            {
+                if remaining_time.num_hours() != 0 {
+                    format!("{}h ", remaining_time.num_hours())
+                } else {
+                    "".to_string()
+                }
+            },
+            format!(
+                "{}m {:>2}s remaining",
+                remaining_time.num_minutes() % 60,
+                remaining_time.num_seconds() % 60,
+            ),
+        ]
+        .concat()
     } else {
         fn format_time_with_date(time_now: DateTime<Local>, time: DateTime<Local>) -> String {
             if time.date_naive() - time_now.date_naive() >= TimeDelta::weeks(1) {
