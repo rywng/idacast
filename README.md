@@ -6,9 +6,13 @@
 /___/ \__,_/ \__,_/ \____/ \__,_//____/ \__/
 ```
 
-Simple program to view splatoon3's battle stages from your terminal. It supports different languages [^locales].
+Simple but fast program to view splatoon3's battle stages from your terminal. It supports different languages [^locales].
 
-> This program is under active development, and API is subject to change.
+### Features
+
+- Fast loading time, only fetch the necessary data from the Internet.
+- Network requests are cached by default, so that it loads immediately if you've started this program before.
+- Text-centric clean UI, zero distraction and only the important information shown.
 
 ## Usage
 
