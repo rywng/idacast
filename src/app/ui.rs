@@ -447,12 +447,17 @@ fn format_work_schedule_title<'a>(
     let stage_name = name.clone().bold();
     let rule = match rule {
         CoopRule::Regular => "".into(),
-        CoopRule::BigRun => " Big Run ".italic().bold().black().on_red(),
+        CoopRule::BigRun => " Big Run ".italic().bold().black().on_blue(),
         CoopRule::TeamContest => " Team Contest ".italic().bold().black().on_yellow(),
     };
     let time = format_stage_times(start_time, end_time).italic();
     let spacer: Span = " ".into();
-    let space = fill_mid_spaces(&format!("{}{}{}", stage_name, spacer, rule), &time.content, sub_area).into();
+    let space = fill_mid_spaces(
+        &format!("{}{}{}", stage_name, spacer, rule),
+        &time.content,
+        sub_area,
+    )
+    .into();
     Line::from(vec![stage_name, spacer, rule, space, time])
 }
 

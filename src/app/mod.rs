@@ -91,7 +91,7 @@ impl AppScreen {
             AppScreen::Battles => Color::LightGreen,
             AppScreen::Work => Color::LightRed,
             AppScreen::Challenges => Color::LightMagenta,
-            AppScreen::Fest => Color::LightBlue,
+            AppScreen::Fest => Color::LightCyan,
         };
         format!(" {} ", text).fg(color).bg(Color::Black).into()
     }
