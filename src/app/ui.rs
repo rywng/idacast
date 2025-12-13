@@ -327,7 +327,7 @@ fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: 
     let block = Block::bordered()
         .title(Line::from(challenge_event.event_name.name.clone()).centered())
         .title_bottom(
-            Line::from(challenge_event.desc.clone().replace(HTML_NEW_LINE, "")).right_aligned(),
+            Line::from(challenge_event.desc.clone().replace(HTML_NEW_LINE, " ")).right_aligned(),
         )
         .border_style(Style::new().magenta());
 
