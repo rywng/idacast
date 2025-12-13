@@ -45,7 +45,7 @@ impl Schedule for BattleSchedule {
 pub enum CoopRule {
     Regular,
     BigRun,
-    TeamContest
+    TeamContest,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
@@ -122,7 +122,7 @@ impl From<&raw_data::CoopNode> for CoopSchedule {
                 Some(rule) => match rule.as_str() {
                     "TEAM_CONTEST" => CoopRule::TeamContest,
                     "BIG_RUN" => CoopRule::BigRun,
-                    _ => CoopRule::Regular
+                    _ => CoopRule::Regular,
                 },
                 None => CoopRule::Regular,
             },

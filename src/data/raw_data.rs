@@ -416,12 +416,12 @@ mod test {
                     },
                     NameID {
                         name: "Splattershot Nova".to_string(),
-                        id: "85c6eda8dffc77a0".to_string()
+                        id: "85c6eda8dffc77a0".to_string(),
                     },
                     NameID {
                         name: "Ballpoint Splatling".to_string(),
-                        id: "439343ee49a5126b".to_string()
-                    }
+                        id: "439343ee49a5126b".to_string(),
+                    },
                 ],
                 rule: Some("TEAM_CONTEST".to_string()),
             },
