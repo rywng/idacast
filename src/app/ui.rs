@@ -4,7 +4,7 @@ use crate::{
     app::{App, AppScreen, RefreshState},
     data::{
         filter_schedules,
-        schedules::{BattleSchedule, CoopSchedule, LeagueSchedule},
+        schedules::{BattleSchedule, CoopRule, CoopSchedule, LeagueSchedule},
     },
 };
 use chrono::{DateTime, Duration, Local, SubsecRound, TimeDelta, Utc};
@@ -244,9 +244,10 @@ fn render_work_widget(
             let mut text: Vec<Line> = Vec::new();
 
             for schedule in schedules {
-                let line = format_schedule_title(
+                let line = format_work_schedule_title(
                     sub_area,
                     schedule.stage.name.clone(),
+                    &schedule.rule,
                     schedule.start_time,
                     schedule.end_time,
                 );
@@ -434,6 +435,25 @@ fn format_schedule_title<'a>(
     let time = format_stage_times(start_time, end_time).italic();
     let space = fill_mid_spaces(&rule.content, &time.content, sub_area).into();
     Line::from(vec![rule, space, time])
+}
+
+fn format_work_schedule_title<'a>(
+    sub_area: Rect,
+    name: String,
+    rule: &CoopRule,
+    start_time: DateTime<Utc>,
+    end_time: DateTime<Utc>,
+) -> Line<'a> {
+    let stage_name = name.clone().bold();
+    let rule = match rule {
+        CoopRule::Regular => "".into(),
+        CoopRule::BigRun => " Big Run ".italic().bold().black().on_red(),
+        CoopRule::TeamContest => " Team Contest ".italic().bold().black().on_yellow(),
+    };
+    let time = format_stage_times(start_time, end_time).italic();
+    let spacer: Span = " ".into();
+    let space = fill_mid_spaces(&format!("{}{}{}", stage_name, spacer, rule), &time.content, sub_area).into();
+    Line::from(vec![stage_name, spacer, rule, space, time])
 }
 
 fn fill_mid_spaces(lhs: &str, rhs: &str, area: Rect) -> String {
