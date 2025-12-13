@@ -1,6 +1,6 @@
 let
   nixpkgs = fetchTarball
-    "https://github.com/NixOS/nixpkgs/archive/nixos-25.05.tar.gz";
+    "https://github.com/NixOS/nixpkgs/archive/nixos-25.11.tar.gz";
   pkgs = import nixpkgs {
     config = { };
     overlays = [ ];
