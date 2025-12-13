@@ -6,7 +6,7 @@ edition = "2024"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/rywng/idacast/"
-keywords = ["terminal", "game", "splatoon", "splatoon_3"]
+keywords = ["terminal", "game", "splatoon", "splatoon3", "nintendo"]
 categories = ["command-line-utilities"]
 
 [dependencies]
