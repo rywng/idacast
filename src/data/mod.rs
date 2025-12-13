@@ -148,7 +148,8 @@ pub fn filter_schedules<T: Schedule>(
     let mut start: Option<usize> = None;
     let time_now = Local::now();
     for (index, schedule) in schedules.iter().enumerate() {
-        if schedule.get_start_time() <= time_now && schedule.get_end_time() >= time_now {
+        if schedule.get_end_time() >= time_now {
+            // If a schedule start in the future, display the first one.
             start = Some(index);
             break;
         }
