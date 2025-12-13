@@ -222,7 +222,7 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
 
     render_work_widget(
         filter_schedules(
-            &sorted_work_schedules,
+            sorted_work_schedules,
             area.height as usize / 3,
             Some(app.app_ui.work.scroll_offset),
         ),
