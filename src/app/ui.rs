@@ -447,7 +447,7 @@ fn format_work_schedule_title<'a>(
     let stage_name = name.clone().bold();
     let rule = match rule {
         CoopRule::Regular => "".into(),
-        CoopRule::BigRun => " Big Run ".italic().bold().black().on_blue(),
+        CoopRule::BigRun => " Big Run ".italic().bold().black().on_magenta(),
         CoopRule::TeamContest => " Team Contest ".italic().bold().black().on_yellow(),
     };
     let time = format_stage_times(start_time, end_time).italic();
