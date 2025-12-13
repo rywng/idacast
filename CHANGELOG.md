@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/rywng/idacast/compare/v0.1.7...v0.1.8) - 2025-12-13
+
+### Added
+
+- *(ui)* Fine tune color of text
+- *(work)* Add a flare to special work schedules
+- *(work)* Enable viewing bigrun and teamcontest
+
+### Fixed
+
+- *(filtering)* Also display schedules starting from the future (like SR)
+- *(ui)* Fix inproper formatting of challenge sub-titles
+
+### Other
+
+- *(fmt)* Format code
+- *(README)* Demonstrate the features of this software.
+
 ## [0.1.7](https://github.com/rywng/idacast/compare/v0.1.6...v0.1.7) - 2025-12-12
 
 ### Added
