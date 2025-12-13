@@ -6,6 +6,7 @@ use super::{
     translation::{Dictionary, Translatable},
 };
 
+#[allow(dead_code)] // Very easy to implement, doesn't hurt to keep them.
 pub trait Schedule {
     fn get_start_time(&self) -> DateTime<Utc>;
     fn get_end_time(&self) -> DateTime<Utc>;
