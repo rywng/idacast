@@ -33,6 +33,7 @@ pub(super) struct Data {
 #[serde(rename_all = "camelCase")]
 pub(super) struct CoopGroupingSchedule {
     pub regular_schedules: ScheduleContainer<CoopNode>,
+    pub big_run_schedules: ScheduleContainer<CoopNode>,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]
@@ -48,12 +49,13 @@ pub(super) struct CoopNode {
 #[derive(Deserialize, Debug, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct CoopSetting {
-    pub boss: NameID,
+    pub boss: Option<NameID>,
     pub coop_stage: NameID,
     pub weapons: Vec<NameID>,
+    pub rule: Option<String>,
 }
 
-#[derive(Deserialize, Debug, PartialEq, Eq)]
+#[derive(Deserialize, Debug, PartialEq, Eq, Clone)]
 pub(super) struct NameID {
     pub name: String,
     #[serde(alias = "__splatoon3ink_id")]
@@ -324,14 +326,15 @@ mod test {
             start_time: Utc.with_ymd_and_hms(2025, 7, 31, 0, 0, 0).unwrap(),
             end_time: Utc.with_ymd_and_hms(2025, 8, 1, 16, 0, 0).unwrap(),
             match_setting: CoopSetting {
-                boss: NameID {
+                boss: Some(NameID {
                     name: "Cohozuna".to_string(),
                     id: "Q29vcEVuZW15LTIz".to_string(),
-                },
+                }),
                 coop_stage: NameID {
                     name: "Marooner's Bay".to_string(),
                     id: "Q29vcFN0YWdlLTY=".to_string(),
                 },
+                rule: None,
                 weapons: vec![
                     NameID {
                         name: "Dread Wringer".to_string(),
@@ -354,6 +357,76 @@ mod test {
         };
 
         let parsed: CoopNode = serde_json::from_str(&example_schedule).unwrap();
+        assert_eq!(parsed, expected);
+    }
+
+    #[test]
+    fn test_deserialize_coop_big_run() {
+        let example_schedule_node = r#"{"startTime":"2025-12-13T00:00:00Z","endTime":"2025-12-15T00:00:00Z","setting":{"__typename":"CoopBigRunSetting","rule":"BIG_RUN","boss":{"name":"Triumvirate","id":"Q29vcEVuZW15LTMw"},"coopStage":{"name":"Barnacle & Dime","thumbnailImage":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/e7736b82a0a9b5c4b3777676f6d2d63ac3c612f1cd63df403153e77564c98b62_1.png"},"image":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/high_resolution/e7736b82a0a9b5c4b3777676f6d2d63ac3c612f1cd63df403153e77564c98b62_0.png"},"id":"Q29vcFN0YWdlLTEwNQ=="},"__isCoopSetting":"CoopBigRunSetting","weapons":[{"__splatoon3ink_id":"01b960996da8ed63","name":"Random","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/ui_img/473fffb2442075078d8bb7125744905abdeae651b6a5b7453ae295582e45f7d1_0.png"}},{"__splatoon3ink_id":"01b960996da8ed63","name":"Random","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/ui_img/473fffb2442075078d8bb7125744905abdeae651b6a5b7453ae295582e45f7d1_0.png"}},{"__splatoon3ink_id":"01b960996da8ed63","name":"Random","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/ui_img/473fffb2442075078d8bb7125744905abdeae651b6a5b7453ae295582e45f7d1_0.png"}},{"__splatoon3ink_id":"01b960996da8ed63","name":"Random","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/ui_img/473fffb2442075078d8bb7125744905abdeae651b6a5b7453ae295582e45f7d1_0.png"}}]},"__splatoon3ink_king_salmonid_guess":"Triumvirate"}
+        "#;
+
+        let expected: CoopNode = CoopNode {
+            start_time: Utc.with_ymd_and_hms(2025, 12, 13, 0, 0, 0).unwrap(),
+            end_time: Utc.with_ymd_and_hms(2025, 12, 15, 0, 0, 0).unwrap(),
+            match_setting: CoopSetting {
+                boss: Some(NameID {
+                    name: "Triumvirate".to_string(),
+                    id: "Q29vcEVuZW15LTMw".to_string(),
+                }),
+                coop_stage: NameID {
+                    name: "Barnacle & Dime".to_string(),
+                    id: "Q29vcFN0YWdlLTEwNQ==".to_string(),
+                },
+                weapons: vec![
+                    NameID {
+                        name: "Random".to_string(),
+                        id: "01b960996da8ed63".to_string(),
+                    };
+                    4
+                ],
+                rule: Some("BIG_RUN".to_string()),
+            },
+        };
+        let parsed_schedule: CoopNode = serde_json::from_str(example_schedule_node).unwrap();
+        assert_eq!(parsed_schedule, expected);
+    }
+
+    #[test]
+    fn test_deserialize_coop_team_contest() {
+        let example_raw = r#"{"startTime":"2025-11-08T00:00:00Z","endTime":"2025-11-10T00:00:00Z","setting":{"__typename":"CoopTeamContestSetting","rule":"TEAM_CONTEST","boss":null,"coopStage":{"name":"Gone Fission Hydroplant","thumbnailImage":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/low_resolution/f1e4df4cff1dc5e0acc66a9654fecf949224f7e4f6bd36305d4600ac3fa3db7b_1.png"},"image":{"url":"https://splatoon3.ink/assets/splatnet/v3/stage_img/icon/high_resolution/f1e4df4cff1dc5e0acc66a9654fecf949224f7e4f6bd36305d4600ac3fa3db7b_0.png"},"id":"Q29vcFN0YWdlLTc="},"__isCoopSetting":"CoopTeamContestSetting","weapons":[{"__splatoon3ink_id":"b4ebb5629d8c3e5f","name":"Undercover Brella","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/7508ba286e5ac5befe63daea807ab54996c3f0ef3577be9ab5d2827c49dedd75_0.png"}},{"__splatoon3ink_id":"914ca6f3cba7aa98","name":"Recycled Brella 24 Mk I","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/1e62c90d72a8c11a91ca85be6fe6a3042514e1d77bd01ed65c22ef8e7256809a_0.png"}},{"__splatoon3ink_id":"85c6eda8dffc77a0","name":"Splattershot Nova","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/8034dd1acde77c1a2df32197c12faa5ba1d65b43d008edd1b40f16fa8d106944_0.png"}},{"__splatoon3ink_id":"439343ee49a5126b","name":"Ballpoint Splatling","image":{"url":"https://splatoon3.ink/assets/splatnet/v3/weapon_illust/206dbf3b5dfc9962b6a783acf68a856f0c8fbf0c56257c2ca5c25d63198dd6e1_0.png"}}]}}
+        "#;
+
+        let expected = CoopNode {
+            start_time: Utc.with_ymd_and_hms(2025, 11, 8, 0, 0, 0).unwrap(),
+            end_time: Utc.with_ymd_and_hms(2025, 11, 10, 0, 0, 0).unwrap(),
+            match_setting: CoopSetting {
+                boss: None,
+                coop_stage: NameID {
+                    name: "Gone Fission Hydroplant".to_string(),
+                    id: "Q29vcFN0YWdlLTc=".to_string(),
+                },
+                weapons: vec![
+                    NameID {
+                        name: "Undercover Brella".to_string(),
+                        id: "b4ebb5629d8c3e5f".to_string(),
+                    },
+                    NameID {
+                        name: "Recycled Brella 24 Mk I".to_string(),
+                        id: "914ca6f3cba7aa98".to_string(),
+                    },
+                    NameID {
+                        name: "Splattershot Nova".to_string(),
+                        id: "85c6eda8dffc77a0".to_string()
+                    },
+                    NameID {
+                        name: "Ballpoint Splatling".to_string(),
+                        id: "439343ee49a5126b".to_string()
+                    }
+                ],
+                rule: Some("TEAM_CONTEST".to_string()),
+            },
+        };
+        let parsed: CoopNode = serde_json::from_str(example_raw).unwrap();
         assert_eq!(parsed, expected);
     }
 

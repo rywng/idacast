@@ -42,10 +42,18 @@ impl Schedule for BattleSchedule {
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
+pub enum CoopRule {
+    Regular,
+    BigRun,
+    TeamContest
+}
+
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize, Clone)]
 pub struct CoopSchedule {
+    pub rule: CoopRule,
     pub start_time: DateTime<Utc>,
     pub end_time: DateTime<Utc>,
-    pub boss: NameID,
+    pub boss: Option<NameID>,
     pub stage: NameID,
     pub weapons: Vec<NameID>,
 }
@@ -108,8 +116,16 @@ impl From<&raw_data::CoopNode> for CoopSchedule {
         Self {
             start_time: value.start_time,
             end_time: value.end_time,
-            boss: (&value.match_setting.boss).into(),
+            boss: value.match_setting.boss.as_ref().map(|value| value.into()),
             stage: (&value.match_setting.coop_stage).into(),
+            rule: match &value.match_setting.rule {
+                Some(rule) => match rule.as_str() {
+                    "TEAM_CONTEST" => CoopRule::TeamContest,
+                    "BIG_RUN" => CoopRule::BigRun,
+                    _ => CoopRule::Regular
+                },
+                None => CoopRule::Regular,
+            },
             weapons: value
                 .match_setting
                 .weapons
@@ -216,6 +232,16 @@ impl From<raw_data::RawData> for Schedules {
             .iter()
             .for_each(|schedule| {
                 res.work_regular.push(schedule.into());
+            });
+
+        value
+            .data
+            .coop_grouping_schedule
+            .big_run_schedules
+            .nodes
+            .iter()
+            .for_each(|schedule| {
+                res.work_big_run.push(schedule.into());
             });
 
         value.data.event_schedules.nodes.iter().for_each(|event| {

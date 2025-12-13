@@ -211,9 +211,18 @@ fn render_work(app: &App, frame: &mut Frame, area: Rect) {
     let block = Block::bordered()
         .border_style(Color::Red)
         .title("Grizzco Work");
+    let sorted_work_schedules = &mut [
+        &app.schedules.work_regular[..],
+        &app.schedules.work_big_run[..],
+        &app.schedules.work_team_contest[..],
+    ]
+    .concat();
+    sorted_work_schedules.sort_by(|l, r| l.end_time.cmp(&r.end_time)); // The special work may be
+    // announced ahead of time, and don't know where it fits in the regular work schedule
+
     render_work_widget(
         filter_schedules(
-            &app.schedules.work_regular,
+            &sorted_work_schedules,
             area.height as usize / 3,
             Some(app.app_ui.work.scroll_offset),
         ),
@@ -242,7 +251,10 @@ fn render_work_widget(
                     schedule.end_time,
                 );
                 text.push(line);
-                let boss = schedule.boss.name.clone().bold();
+                let boss = match &schedule.boss {
+                    Some(boss) => boss.name.clone().bold(),
+                    None => "".bold(),
+                };
                 let weapons = schedule
                     .weapons
                     .iter()
