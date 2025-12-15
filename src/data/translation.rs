@@ -26,7 +26,7 @@ impl Dictionary for FlattenedTranslationDictionary {
 impl From<TranslationData> for FlattenedTranslationDictionary {
     fn from(value: TranslationData) -> Self {
         let mut res: HashMap<String, String> = HashMap::new();
-        for translation_map in [value.bosses, value.stages, value.rules] {
+        for translation_map in [value.bosses, value.stages, value.rules, value.weapons] {
             translation_map
                 .iter()
                 .for_each(|(id, translation_content)| {
@@ -40,13 +40,15 @@ impl From<TranslationData> for FlattenedTranslationDictionary {
 
 #[derive(Deserialize, Debug)]
 pub struct TranslationData {
-    // gear: TranslationMap,
     stages: TranslationMap,
     rules: TranslationMap,
-    // weapons: TranslationMap,
-    bosses: TranslationMap,
+    weapons: TranslationMap,
     // brands: TranslationMap,
+    // gear: TranslationMap,
     // powers: TranslationMap,
+    // festivals: TranslationMap,
+    // events: TranslationMap,
+    bosses: TranslationMap,
 }
 
 #[derive(Deserialize, Debug, PartialEq, Eq)]

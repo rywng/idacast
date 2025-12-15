@@ -1,4 +1,4 @@
-use crate::data::schedules::Schedule;
+use crate::data::schedules::{BattleSchedule, CoopSchedule, LeagueSchedule, Schedule};
 use chrono::Local;
 use futures::join;
 use schedules::Schedules;
@@ -88,37 +88,78 @@ pub fn translate_schedules(
     mut schedules: Schedules,
     dict: &translation::FlattenedTranslationDictionary,
 ) -> Result<Schedules> {
-    schedules
-        .regular
-        .iter_mut()
-        .for_each(|schedule| translate_schedule(dict, schedule));
-
-    schedules
-        .anarchy_open
-        .iter_mut()
-        .for_each(|schedule| translate_schedule(dict, schedule));
-
-    schedules
-        .anarchy_series
-        .iter_mut()
-        .for_each(|schedule| translate_schedule(dict, schedule));
-
-    schedules
-        .x_battle
-        .iter_mut()
-        .for_each(|schedule| translate_schedule(dict, schedule));
+    translate_battles(
+        &mut schedules.regular,
+        &mut schedules.anarchy_open,
+        &mut schedules.anarchy_series,
+        &mut schedules.x_battle,
+        dict,
+    );
+    translate_work(
+        &mut schedules.work_regular,
+        &mut schedules.work_big_run,
+        &mut schedules.work_team_contest,
+        dict,
+    );
+    translate_league(&mut schedules.league, dict);
 
     Ok(schedules)
 }
 
-fn translate_schedule(
-    dict: &std::collections::HashMap<String, String>,
-    schedule: &mut schedules::BattleSchedule,
+fn translate_league(
+    league_challenges: &mut [LeagueSchedule],
+    dict: &translation::FlattenedTranslationDictionary,
 ) {
-    for stage in &mut schedule.stages {
-        *stage = stage.translate(dict);
-    }
-    schedule.rule = schedule.rule.translate(dict);
+    league_challenges.iter_mut().for_each(|schedule| {
+        schedule.event_name = schedule.event_name.translate(dict);
+        schedule.stages.iter_mut().for_each(|stage| {
+            *stage = stage.translate(dict);
+        });
+        schedule.rule = schedule.rule.translate(dict);
+    });
+}
+
+fn translate_work(
+    regular: &mut [CoopSchedule],
+    big_run: &mut [CoopSchedule],
+    team_contest: &mut [CoopSchedule],
+    dict: &translation::FlattenedTranslationDictionary,
+) {
+    let translate = |schedules: &mut [CoopSchedule]| {
+        schedules.iter_mut().for_each(|schedule| {
+            for weapon in &mut schedule.weapons {
+                *weapon = weapon.translate(dict);
+            }
+            schedule.stage = schedule.stage.translate(dict);
+            schedule.boss = schedule.boss.take().map(|boss| boss.translate(dict))
+        });
+    };
+    translate(regular);
+    translate(big_run);
+    translate(team_contest);
+}
+
+fn translate_battles(
+    regular: &mut [BattleSchedule],
+    anarchy_open: &mut [BattleSchedule],
+    anarchy_series: &mut [BattleSchedule],
+    x_battle: &mut [BattleSchedule],
+    dict: &translation::FlattenedTranslationDictionary,
+) {
+    let translate = |schedules: &mut [BattleSchedule]| {
+        schedules.iter_mut().for_each(|schedule| {
+            {
+                for stage in &mut schedule.stages {
+                    *stage = stage.translate(dict);
+                }
+                schedule.rule = schedule.rule.translate(dict);
+            };
+        });
+    };
+    translate(regular);
+    translate(anarchy_open);
+    translate(anarchy_series);
+    translate(x_battle);
 }
 
 pub async fn get_schedules(lang: Option<String>) -> Result<schedules::Schedules> {
