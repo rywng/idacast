@@ -354,7 +354,7 @@ fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: 
         .map(|stage| stage.name.clone())
         .collect();
     let rhs = maps.join(" / ");
-    let mid_spaces = "      ";
+    let mid_spaces = ": ";
     content.push(
         Line::from(vec![
             Span::from(rule_name.clone()).underlined().bold(),
@@ -365,14 +365,19 @@ fn render_challenge_widget(challenge_event: &LeagueSchedule, area: Rect, frame: 
     );
 
     content.push("".into());
+    let now = Utc::now();
     for time_period in &challenge_event.time_periods {
-        content.push(
-            Line::from(format_stage_times(
-                time_period.start_time,
-                time_period.end_time,
-            ))
-            .centered(),
-        );
+        let line = Line::from(format_stage_times(
+            time_period.start_time,
+            time_period.end_time,
+        ))
+        .centered();
+        content.push(if time_period.end_time < now {
+            // Past schedules
+            line.dim().italic()
+        } else {
+            line
+        });
     }
 
     content.push("".into());
