@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9](https://github.com/rywng/idacast/compare/v0.1.8...v0.1.9) - 2025-12-22
+
+### Added
+
+- *(challenges)* dim past schedules
+- *(translation)* Add support for work and partial challenges
+
+### Other
+
+- *(crates)* Update the keywords for this program
+
 ## [0.1.8](https://github.com/rywng/idacast/compare/v0.1.7...v0.1.8) - 2025-12-13
 
 ### Added
