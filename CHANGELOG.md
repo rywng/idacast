@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/rywng/idacast/compare/v0.1.9...v0.1.10) - 2026-05-12
+
+### Fixed
+
+- *(update)* Use more efficient update schedule
+
+### Other
+
+- update deps
+
 ## [0.1.9](https://github.com/rywng/idacast/compare/v0.1.8...v0.1.9) - 2025-12-22
 
 ### Added
